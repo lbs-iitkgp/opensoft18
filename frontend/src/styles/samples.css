@@ -1,0 +1,17 @@
+.samplesContainer {
+  display: flex;
+  flex-direction: row;
+  padding-left: 5vw;
+  padding-right: 5vw;
+  align-items: center;
+  justify-content: center;
+}
+
+.sampleImage {
+  padding: 10px;
+}
+
+.sampleImage img {
+  cursor: pointer;
+  max-height: 30vh;
+}
