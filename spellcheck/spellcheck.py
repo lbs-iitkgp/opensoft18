@@ -122,13 +122,25 @@ def vsimcorrection(word):
         return max(the, key=P)
     else:
         return "#@!"
+        
+def correctspaces(word):
+    "Returns the appropriate word which contains atmost one whitespace"
+    
+    if word.count(' ') == 2:
+        return word
+        
+    word = word.replace(' ', '', 1)
+    return correctspaces(word)
 
 def spellcor(word):
-    store = vsimcorrection(word.lower())
+    word = word.lower()
+    store = vsimcorrection(correctspaces(word))
+
     if store == "#@!":
-        return correction(word.lower())
+        return correction(correctspaces(word))
     else :
         return store
+        
 
 if __name__ == "__main__":
     spellcor(argv[1])
