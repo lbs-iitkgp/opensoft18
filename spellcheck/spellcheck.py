@@ -124,7 +124,7 @@ def vsimcorrection(word):
         return "#@!"
         
 def correctspaces(word):
-    "Returns the appropriate word which contains atmost one whitespace"
+    "Returns the appropriate word which contains atmost two whitespaces."
     
     if word.count(' ') == 2:
         return word
