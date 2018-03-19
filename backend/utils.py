@@ -1,5 +1,7 @@
 import sys
 import cv2
+import json
+import copy
 
 class coordinate:
     x = 0
@@ -15,6 +17,18 @@ class boundingBox:
     tr = coordinate(0,0)
     br = coordinate(0,0)
     bl = coordinate(0,0)
+    def __init__(self, tl, tr, bl, br, bound_text):
+        self.tl = tl
+        self.tr = tr
+        self.br = br
+        self.bl = bl
+        self.bound_text = bound_text
+    def display(self):
+        print(self.bound_text)
+        print(self.tl.x,self.tl.y)
+        print(self.tr.x,self.tr.y)
+        print(self.bl.x,self.bl.y)
+        print(self.br.x,self.br.y)
 
     # write __init__ function
 
@@ -28,10 +42,30 @@ def get_azure_ocr(input_image):
     return azure_json
 
 def parse_azure_json(azure_json):
-    # Check for validity of returned output
-    # return a list of all bounding boxes with the respective contained text
-    # Use the bounding box class to do the same
-    return []
+    data = json.load(open(azure_json))
+    sentence = data["recognitionResult"]["lines"]
+    l = len(sentence)
+
+    #initialize
+    c = coordinate(0,0)
+    bb = boundingBox(c,c,c,c,"")
+    llist = []
+
+    for i in range(l):
+        #iterates through lines
+        line = data["recognitionResult"]["lines"][i]["words"]
+        llen = len(line)
+        for j in range(llen):
+            #iterates through words
+            word_box = line[j]["boundingBox"]
+            word = line[j]["text"]
+            bb.bl = coordinate(word_box[0],word_box[1])
+            bb.br = coordinate(word_box[2],word_box[3])
+            bb.tr = coordinate(word_box[4],word_box[5])
+            bb.tl = coordinate(word_box[6],word_box[7])
+            bb.bound_text = word
+            llist.append(copy.deepcopy(bb))
+    return llist
 
 def get_parallel_boxes(bounding_boxes):
     list_of_boxes = []
