@@ -1,5 +1,7 @@
 import sys
 import cv2
+import pre_process as pp
+
 
 class coordinate:
     x = 0
@@ -19,8 +21,15 @@ class boundingBox:
     # write __init__ function
 
 def preprocess(input_image):
-    in_image = cv2.imread(input_image)
-    out_image = in_image
+    """
+    pre-processes the image and converts to gray-scale
+    @Params
+        input_image: path to the image to be processed
+    @Returns
+        out_image: processed image in cv2 format
+    """
+    pp.notescan_main(input_image)
+    out_image = cv2.imread("output.png")
     return out_image
 
 def get_azure_ocr(input_image):
