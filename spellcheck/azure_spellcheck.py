@@ -41,8 +41,8 @@ def make_correction(old_query):
 if __name__ == "__main__":
   '''
   1. Get key for spell check from https://azure.microsoft.com/en-in/try/cognitive-services
-     and save it in a .env file
-  2. Run this script like, `python3 azure_spellcheck.py 'Afoxilin talet (10)'`
+     and save it in a .env file, like the one shown in .env_example file.
+  2. Run this script like, `python3 azure_spellcheck.py 'Afoxilin talet (10)'`.
   '''
   query = argv[1] # For example, 'Afoxilin talet (10)'
   make_correction(query)
