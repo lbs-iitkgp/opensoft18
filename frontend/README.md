@@ -1,0 +1,1 @@
+# Frontend for OpenSoft 2018 project - DigiCon
