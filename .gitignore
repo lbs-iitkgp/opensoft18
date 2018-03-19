@@ -1,3 +1,5 @@
 # Visual Studio code settings
 .vscode
 .env
+input.jpg
+output.png
