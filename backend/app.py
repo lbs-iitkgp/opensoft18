@@ -16,4 +16,4 @@ def index():
     return "Hello!"
 
 if __name__ == "__main__":
-    APP.run(debug=True, host='0.0.0.0', port=5010, use_reloader=False)
+    APP.run(debug=True, host='0.0.0.0', port=8080, use_reloader=False)
