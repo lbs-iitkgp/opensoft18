@@ -2,6 +2,7 @@ import sys
 import cv2
 import pre_process as pp
 
+
 class coordinate:
     x = 0
     y = 0
