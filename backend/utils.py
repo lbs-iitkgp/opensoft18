@@ -41,17 +41,13 @@ class boundingBox:
         self.bl = bl
         self.bound_text = bound_text
         
-    def display(self):
-        
-        """
-        display box text and it's coordinates
-        """
-        
-        print(self.bound_text)
-        print(self.tl.x,self.tl.y)
-        print(self.tr.x,self.tr.y)
-        print(self.bl.x,self.bl.y)
-        print(self.br.x,self.br.y)
+    def __repr__(self): #object definition
+        return "<boundingBox bound_text:%s tl:(%s,%s) tr:(%s,%s) bl:(%s,%s) br:(%s,%s)>" %(self.bound_text,self.tl.x,self.tl.y,
+            self.tr.x,self.tr.y,self.bl.x,self.bl.y,self.br.x,self.br.y)
+
+    def __str__(self): #print statement
+        return "bound_text:%s \n tl:(%s,%s) \n tr:(%s,%s) \n bl:(%s,%s) \n br:(%s,%s)" %(self.bound_text,self.tl.x,self.tl.y,
+            self.tr.x,self.tr.y,self.bl.x,self.bl.y,self.br.x,self.br.y)
 
 
 def preprocess(input_image):
