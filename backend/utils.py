@@ -1,5 +1,7 @@
 import sys
 import cv2
+import json
+import copy
 import pre_process as pp
 
 
@@ -18,7 +20,28 @@ class boundingBox:
     br = coordinate(0,0)
     bl = coordinate(0,0)
 
-    # write __init__ function
+    def __init__(self, tl, tr, bl, br, bound_text):
+        
+        """
+        :param tl: coordinates of top left
+        :param tr: coordinates of top right
+        :param bl: coordinates of bottom left
+        :param br: coordinates of bottom right
+        """
+        
+        self.tl = tl
+        self.tr = tr
+        self.br = br
+        self.bl = bl
+        self.bound_text = bound_text
+
+    def __repr__(self): #object definition
+        return "<boundingBox bound_text:%s tl:(%s,%s) tr:(%s,%s) bl:(%s,%s) br:(%s,%s)>" %(self.bound_text,self.tl.x,self.tl.y,
+            self.tr.x,self.tr.y,self.bl.x,self.bl.y,self.br.x,self.br.y)
+
+    def __str__(self): #print statement
+        return "bound_text:%s \n tl:(%s,%s) \n tr:(%s,%s) \n bl:(%s,%s) \n br:(%s,%s)" %(self.bound_text,self.tl.x,self.tl.y,
+            self.tr.x,self.tr.y,self.bl.x,self.bl.y,self.br.x,self.br.y)
 
 def preprocess(input_image):
     """
@@ -35,10 +58,33 @@ def get_azure_ocr(input_image):
     return azure_json
 
 def parse_azure_json(azure_json):
-    # Check for validity of returned output
-    # return a list of all bounding boxes with the respective contained text
-    # Use the bounding box class to do the same
-    return []
+    """
+    extract data from json created by Azure
+    :param azure_json: path to the json file
+    :return llist: list of boundings boxes of words
+    """
+
+    data = json.load(open(azure_json))
+    sentence = data["recognitionResult"]["lines"]
+    l = len(sentence)
+
+    #initialize
+    c = coordinate(0,0)
+    bb = boundingBox(c,c,c,c,"")
+    llist = []
+    for i in range(l):
+        line = data["recognitionResult"]["lines"][i]["words"]
+        llen = len(line)
+        for j in range(llen):
+            word_box = line[j]["boundingBox"]
+            word = line[j]["text"]
+            bb.bl = coordinate(word_box[0],word_box[1])
+            bb.br = coordinate(word_box[2],word_box[3])
+            bb.tr = coordinate(word_box[4],word_box[5])
+            bb.tl = coordinate(word_box[6],word_box[7])
+            bb.bound_text = word
+            llist.append(copy.deepcopy(bb))
+    return llist
 
 def get_parallel_boxes(bounding_boxes):
     list_of_boxes = []
