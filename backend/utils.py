@@ -14,26 +14,45 @@ class coordinate:
         self.x = x
         self.y = y
 
+        
 class boundingBox:
+    """
+    the rectangular region of interest
+    """
+    
     bound_text = ''
     tl = coordinate(0,0)
     tr = coordinate(0,0)
     br = coordinate(0,0)
     bl = coordinate(0,0)
+    
     def __init__(self, tl, tr, bl, br, bound_text):
+        
+        """
+        :param tl: coordinates of top left
+        :param tr: coordinates of top right
+        :param bl: coordinates of bottom left
+        :param br: coordinates of bottom right
+        """
+        
         self.tl = tl
         self.tr = tr
         self.br = br
         self.bl = bl
         self.bound_text = bound_text
+        
     def display(self):
+        
+        """
+        display box text and it's coordinates
+        """
+        
         print(self.bound_text)
         print(self.tl.x,self.tl.y)
         print(self.tr.x,self.tr.y)
         print(self.bl.x,self.bl.y)
         print(self.br.x,self.br.y)
 
-    # write __init__ function
 
 def preprocess(input_image):
     """
