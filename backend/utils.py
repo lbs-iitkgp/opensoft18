@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sys
 import time
 import cv2
@@ -33,7 +35,7 @@ class boundingBox:
         :param bl: coordinates of bottom left
         :param br: coordinates of bottom right
         :param bound_text: The text inside the box
-        :param box_type: catagorize the boxx as line(L)/word(W)
+        :param box_type: categorize the box as line(L)/word(W)
         """
 
         self.tl = tl
@@ -44,7 +46,7 @@ class boundingBox:
         self.box_type = box_type
 
     def __repr__(self):  # object definition
-        return "<boundingBox box_type:%s bound_text:%s tl:(%s,%s) tr:(%s,%s) bl:(%s,%s) br:(%s,%s)>" %(self.box_type, self.bound_text, self.tl.x, self.tl.y, 
+        return "<boundingBox box_type:%s bound_text:%s tl:(%s,%s) tr:(%s,%s) bl:(%s,%s) br:(%s,%s)>" % (self.box_type, self.bound_text, self.tl.x, self.tl.y,
             self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y)
 
     def __str__(self):  # print statement
@@ -140,10 +142,27 @@ def fix_spelling(bounding_box):
     return bounding_box
 
 
-def replace_image_with_text(input_image, list_of_bounding_boxes):
-    in_image = cv2.imread(input_image)
-    out_image = in_image
-    return out_image
+def put_text(in_img, l_boxes):
+    """
+    put extracted text over the place of original handwritten text
+    :param in_img: cleaned image in opencv format
+    :param l_boxes: list of bounding boxes
+    :return: out_img: a separate image with text placed at right places
+    """
+    out_img = in_img
+    font = cv2.FONT_HERSHEY_PLAIN
+    font_scale = 1
+    font_color = (0, 0, 0)
+    line_type = 2
+
+    for box in l_boxes:
+        cv2.putText(out_img, box.bound_text, box.bl, font, font_scale, font_color, line_type)
+
+    # while debugging and calibrating, uncomment below lines
+#    cv2.imshow("test", out_img)
+#    cv2.waitKey(0)
+
+    return out_img
 
 
 if __name__ == '__main__':
