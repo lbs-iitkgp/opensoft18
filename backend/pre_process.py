@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-'''
+"""
 Converts sequence of images to compact PDF while removing speckles,
 bleedthrough, etc.
 
 Credits to github@mzucker
 https://github.com/mzucker/noteshrink/
-'''
+"""
 
 # for some reason pylint complains about members being undefined :(
 # pylint: disable=E1101
@@ -14,28 +14,28 @@ https://github.com/mzucker/noteshrink/
 from __future__ import print_function
 
 import sys
-import os
-import re
-import subprocess
-import shlex
 
 from argparse import ArgumentParser
 
 import numpy as np
+
+# in some installation of PIL, Image can be imported directly
 try:
-    from PIL import Image
-except ImportError:
     import Image
+except ImportError:
+    from PIL import Image
+
 from scipy.cluster.vq import kmeans, vq
 
 # ignores division warnings caused in numpy
 np.seterr(divide='ignore', invalid='ignore') 
 
-######################################################################
 
 def quantize(image, bits_per_channel=None):
 
-    '''Reduces the number of bits per channel in the given image.'''
+    """
+    Reduces the number of bits per channel in the given image.
+    """
 
     if bits_per_channel is None:
         bits_per_channel = 6
@@ -47,12 +47,13 @@ def quantize(image, bits_per_channel=None):
 
     return ((image.astype(int) >> shift) << shift) + halfbin
 
-######################################################################
 
 def pack_rgb(rgb):
 
-    '''Packs a 24-bit RGB triples into a single integer,
-works on both arrays and tuples.'''
+    """
+    Packs a 24-bit RGB triples into a single integer,
+    works on both arrays and tuples.
+    """
 
     orig_shape = None
 
@@ -74,14 +75,13 @@ works on both arrays and tuples.'''
     else:
         return packed.reshape(orig_shape)
 
-######################################################################
 
 def unpack_rgb(packed):
 
-    '''Unpacks a single integer or array of integers into one or more
-24-bit RGB values.
-
-    '''
+    """
+    Unpacks a single integer or array of integers into one or more
+    24-bit RGB values.
+    """
 
     orig_shape = None
 
@@ -92,22 +92,21 @@ def unpack_rgb(packed):
 
     rgb = ((packed >> 16) & 0xff,
            (packed >> 8) & 0xff,
-           (packed) & 0xff)
+           packed & 0xff)
 
     if orig_shape is None:
         return rgb
     else:
         return np.hstack(rgb).reshape(orig_shape + (3,))
 
-######################################################################
 
 def get_bg_color(image, bits_per_channel=None):
 
-    '''Obtains the background color from an image or array of RGB colors
-by grouping similar colors into bins and finding the most frequent
-one.
-
-    '''
+    """
+    Obtains the background color from an image or array of RGB colors
+    by grouping similar colors into bins and finding the most frequent
+    one.
+    """
 
     assert image.shape[-1] == 3
 
@@ -120,15 +119,13 @@ one.
 
     return unpack_rgb(packed_mode)
 
-######################################################################
 
 def rgb_to_sv(rgb):
 
-    '''Convert an RGB image or array of RGB colors to saturation and
-value, returning each one as a separate 32-bit floating point array or
-value.
-
-    '''
+    """Convert an RGB image or array of RGB colors to saturation and
+    value, returning each one as a separate 32-bit floating point array or
+    value.
+    """
 
     if not isinstance(rgb, np.ndarray):
         rgb = np.array(rgb)
@@ -145,17 +142,19 @@ value.
 
     return saturation, value
 
-######################################################################
 
 def percent(string):
-    '''Convert a string (i.e. 85) to a fraction (i.e. .85).'''
+    """
+    Convert a string (i.e. 85) to a fraction (i.e. .85).
+    """
     return float(string)/100.0
 
-######################################################################
 
 def get_argument_parser():
 
-    '''Parse the command-line arguments for this program.'''
+    """
+    Parse the command-line arguments for this program.
+    """
 
     parser = ArgumentParser(
         description='convert scanned, hand-written notes to PDF')
@@ -233,12 +232,11 @@ def get_argument_parser():
 
     return parser
 
-######################################################################
 
 def load(input_filename):
 
-    '''Load an image with Pillow and convert it to numpy array. Also
-returns the image DPI in x and y as a tuple.'''
+    """Load an image with Pillow and convert it to numpy array. Also
+returns the image DPI in x and y as a tuple."""
 
     try:
         pil_img = Image.open(input_filename)
@@ -259,12 +257,13 @@ returns the image DPI in x and y as a tuple.'''
 
     return img, dpi
 
-######################################################################
 
 def sample_pixels(img, options):
 
-    '''Pick a fixed percentage of pixels in the image, returned in random
-order.'''
+    """
+    Pick a fixed percentage of pixels in the image, returned in random
+    order.
+    """
 
     pixels = img.reshape((-1, 3))
     num_pixels = pixels.shape[0]
@@ -275,14 +274,15 @@ order.'''
 
     return pixels[idx[:num_samples]]
 
-######################################################################
 
 def get_fg_mask(bg_color, samples, options):
 
-    '''Determine whether each pixel in a set of samples is foreground by
-comparing it to the background color. A pixel is classified as a
-foreground pixel if either its value or saturation differs from the
-background by a threshold.'''
+    """
+    Determine whether each pixel in a set of samples is foreground by
+    comparing it to the background color. A pixel is classified as a
+    foreground pixel if either its value or saturation differs from the
+    background by a threshold.
+    """
 
     s_bg, v_bg = rgb_to_sv(bg_color)
     s_samples, v_samples = rgb_to_sv(samples)
@@ -293,16 +293,15 @@ background by a threshold.'''
     return ((v_diff >= options.value_threshold) |
             (s_diff >= options.sat_threshold))
 
-######################################################################
 
 def get_palette(samples, options, return_mask=False, kmeans_iter=40):
 
-    '''Extract the palette for the set of sampled RGB values. The first
-palette entry is always the background color; the rest are determined
-from foreground pixels by running K-means clustering. Returns the
-palette, as well as a mask corresponding to the foreground pixels.
-
-    '''
+    """
+    Extract the palette for the set of sampled RGB values. The first
+    palette entry is always the background color; the rest are determined
+    from foreground pixels by running K-means clustering. Returns the
+    palette, as well as a mask corresponding to the foreground pixels.
+    """
 
     bg_color = get_bg_color(samples, 6)
 
@@ -319,16 +318,15 @@ palette, as well as a mask corresponding to the foreground pixels.
     else:
         return palette, fg_mask
 
-######################################################################
 
 def apply_palette(img, palette, options):
 
-    '''Apply the pallete to the given image. The first step is to set all
-background pixels to the background color; then, nearest-neighbor
-matching is used to map each foreground color to the closest one in
-the palette.
-
-    '''
+    """
+    Apply the pallete to the given image. The first step is to set all
+    background pixels to the background color; then, nearest-neighbor
+    matching is used to map each foreground color to the closest one in
+    the palette.
+    """
 
     bg_color = palette[0]
 
@@ -347,16 +345,15 @@ the palette.
 
     return labels.reshape(orig_shape[:-1])
 
-######################################################################
 
 def save(output_filename, labels, palette, dpi, options):
 
-    '''Save the label/palette pair out as an indexed PNG image.  This
-optionally saturates the pallete by mapping the smallest color
-component to zero and the largest one to 255, and also optionally sets
-the background color to pure white.
-
-    '''
+    """
+    Save the label/palette pair out as an indexed PNG image.  This
+    optionally saturates the pallete by mapping the smallest color
+    component to zero and the largest one to 255, and also optionally sets
+    the background color to pure white.
+    """
 
     if options.saturate:
         palette = palette.astype(np.float32)
@@ -375,17 +372,14 @@ the background color to pure white.
     output_img = output_img.convert("L")
     output_img.save(output_filename, dpi=dpi)
 
-######################################################################
 
 def notescan_main(input_filename):
 
-    '''
-    Main function for this program when run as script.
-    @Params:
-        input_filename: name of the input file
-    @Returns: 
-        Saves processed image as output.png  
-    '''
+    """
+    main function that processes the input file
+    :param input_filename: path to the image file to be loaded
+    :return: None
+    """
 
     options = get_argument_parser().parse_args()
 
@@ -400,7 +394,6 @@ def notescan_main(input_filename):
 
     save(output_filename, labels, palette, dpi, options)
 
-######################################################################
 
 if __name__ == '__main__':
     notescan_main("input.jpg")
