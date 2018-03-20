@@ -2,3 +2,5 @@ numpy>=1.10
 scipy
 Image
 nltk
+Flask
+Flask-Uploads
