@@ -3,7 +3,7 @@ import cv2
 import json
 import copy
 import pre_process as pp
-
+import parse_name as pn
 
 class coordinate:
     x = 0
@@ -52,6 +52,16 @@ def preprocess(input_image):
     pp.notescan_main(input_image)
     out_image = cv2.imread("output.png")
     return out_image
+
+
+def get_names(in_str):
+    """
+    calls extract from parse_name module
+    :param in_str: input string
+    :return: list containing names present in the input string
+    """
+    return pn.extract(in_str)
+
 
 def get_azure_ocr(input_image):
     azure_json = {}
