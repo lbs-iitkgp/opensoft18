@@ -71,6 +71,12 @@ def get_azure_ocr(input_image):
     return azure_json
 
 def parse_azure_json(azure_json):
+    
+    """
+    extract data from json created by Azure
+    :param azure_json: path to the json file
+    :return llist: list of boundings boxes of words
+    """
     data = json.load(open(azure_json))
     sentence = data["recognitionResult"]["lines"]
     l = len(sentence)
