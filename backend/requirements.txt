@@ -2,3 +2,4 @@ numpy>=1.10
 scipy
 Image
 nltk
+img2pdf
