@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 import Samples from './components/samples';
 import './App.css';
-
+import SimpleReactFileUpload from './fileUpload'
 
 class App extends Component {
   render() {
-    var myStyle={
+    var headerStyle={
       fontSize:60,
       color: "blue",
     }
@@ -13,8 +13,9 @@ class App extends Component {
     return (
       <div className="App">
         <header className="App-header">
-          <h1 style={myStyle} className="App-title">Welcome to DigiCon</h1>
+          <h1 style={headerStyle} className="App-title">Welcome to DigiCon</h1>
           <Samples />
+          <SimpleReactFileUpload />
         </header>
       </div>
     );

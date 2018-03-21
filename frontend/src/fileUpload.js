@@ -34,12 +34,19 @@ class SimpleReactFileUpload extends Component {
   }
 
   render() {
+    var headerStyle={
+      fontSize:35,
+      color: "yellow",
+    }
     return (
+
       <form onSubmit={this.onFormSubmit}>
-        <h1>File Upload</h1>
+        <h1 style={headerStyle}>Upload the image that you 
+        want to analyze</h1>
         <input type="file" onChange={this.onChange} />
         <button type="submit">Upload</button>
       </form>
+
    )
   }
 }
