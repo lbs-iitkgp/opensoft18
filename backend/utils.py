@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
 import time
 import cv2
 import json
@@ -8,6 +7,7 @@ import copy
 import img2pdf
 import pre_process as pp
 import parse_name as pn
+import numpy as np
 
 
 class coordinate:
@@ -46,12 +46,12 @@ class boundingBox:
         self.box_type = box_type
 
     def __repr__(self):  # object definition
-        return "<boundingBox box_type:%s bound_text:%s tl:(%s,%s) tr:(%s,%s) bl:(%s,%s) br:(%s,%s)>" % (self.box_type, self.bound_text, self.tl.x, self.tl.y,
-            self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y)
+        return "<boundingBox box_type:%s bound_text:%s tl:(%s,%s) tr:(%s,%s) bl:(%s,%s) br:(%s,%s)>" % (self.box_type,
+            self.bound_text, self.tl.x, self.tl.y, self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y)
 
     def __str__(self):  # print statement
-        return "box_type:%s \nbound_text:%s \ntl:(%s,%s) \ntr:(%s,%s) \nbl:(%s,%s) \nbr:(%s,%s)" %(self.box_type, self.bound_text, self.tl.x, self.tl.y, 
-            self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y)
+        return "box_type:%s \nbound_text:%s \ntl:(%s,%s) \ntr:(%s,%s) \nbl:(%s,%s) \nbr:(%s,%s)" % (self.box_type,
+            self.bound_text, self.tl.x, self.tl.y, self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y)
 
 
 def preprocess(input_image):
@@ -142,21 +142,54 @@ def fix_spelling(bounding_box):
     return bounding_box
 
 
+def draw_box(in_img, l_boxes):
+    """
+    draw red bounding boxes for line ('L') box_types
+    :param in_img: input image in opencv format
+    :param l_boxes: list of bounding boxes to be drawn
+    :return: in_img: image (in opencv format) after drawing boxes in red
+    """
+    red = (0, 0, 255)  # opencv follows bgr pattern
+    for box in l_boxes:
+        if box.box_type == 'L':
+            vertices = np.array([[box.tl.x, box.tl.y], [box.tr.x, box.tr.y], [box.br.x, box.br.y],
+                                 [box.bl.x, box.bl.y]], np.int32)
+            cv2.polylines(in_img, [vertices], True, red, thickness=1, lineType=cv2.LINE_AA)
+
+    # uncomment below lines while debugging
+#    cv2.imshow("debug", in_img)
+#    cv2.waitKey(0)
+
+    return in_img
+    
+
 def put_text(in_img, l_boxes):
     """
-    put extracted text over the place of original handwritten text
+    put extracted text (in black) over the place of original text
     :param in_img: cleaned image in opencv format
     :param l_boxes: list of bounding boxes
     :return: out_img: a separate image with text placed at right places
     """
     out_img = in_img
-    font = cv2.FONT_HERSHEY_PLAIN
-    font_scale = 1
+    font = cv2.FONT_HERSHEY_DUPLEX
     font_color = (0, 0, 0)
-    line_type = 2
+    # multiplying factor used to calculate font_scale in relation to height
+    factor = .03
 
     for box in l_boxes:
-        cv2.putText(out_img, box.bound_text, box.bl, font, font_scale, font_color, line_type)
+        if box.box_type == 'W':
+
+            height = box.bl.y - box.tl.y
+            width = box.tr.x - box.tl.x
+
+            font_scale = factor * height
+            text_size = cv2.getTextSize(box.bound_text, font, font_scale, thickness=1)
+            # to put text in middle of the bounding box
+            text_x_center = int(box.bl.x + ((width / 2) - (text_size[0][0] / 2)))
+            text_y_center = int(box.bl.y - ((height / 2) - (text_size[0][1] / 2)))
+
+            cv2.putText(out_img, box.bound_text, (text_x_center, text_y_center), font, font_scale, font_color,
+                        thickness=1, lineType=cv2.LINE_AA)
 
     # while debugging and calibrating, uncomment below lines
 #    cv2.imshow("test", out_img)
