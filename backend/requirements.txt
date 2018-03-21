@@ -4,3 +4,4 @@ Image
 nltk
 Flask
 Flask-Uploads
+img2pdf
