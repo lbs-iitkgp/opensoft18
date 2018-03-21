@@ -1,7 +1,9 @@
 import sys
+import time
 import cv2
 import json
 import copy
+import img2pdf
 import pre_process as pp
 import parse_name as pn
 
@@ -112,6 +114,15 @@ def parse_azure_json(azure_json):
             bb.bound_text = word
             llist.append(copy.deepcopy(bb))
     return llist
+
+
+def img_to_pdf(image):  # name of the image as input
+    pdf_bytes = img2pdf.convert([image])
+    date_string = time.strftime("%Y-%m-%d-%H:%M:%S.pdf")
+    file = open(date_string, "wb")
+    file.write(pdf_bytes)
+    file.close()
+    return date_string
 
 
 def get_parallel_boxes(bounding_boxes):
