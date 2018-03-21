@@ -20,12 +20,13 @@ class coordinate:
 class boundingBox:
     bound_text = ''
     box_type = ''
+    words = []
     tl = coordinate(0, 0)
     tr = coordinate(0, 0)
     br = coordinate(0, 0)
     bl = coordinate(0, 0)
 
-    def __init__(self, tl, tr, bl, br, bound_text, box_type):
+    def __init__(self, tl, tr, bl, br, bound_text, box_type, words):
 
         """
         :param tl: coordinates of top left
@@ -42,14 +43,15 @@ class boundingBox:
         self.bl = bl
         self.bound_text = bound_text
         self.box_type = box_type
+        self.words = words
 
     def __repr__(self):  # object definition
-        return "<boundingBox box_type:%s bound_text:%s tl:(%s,%s) tr:(%s,%s) bl:(%s,%s) br:(%s,%s)>" %(self.box_type, self.bound_text, self.tl.x, self.tl.y, 
-            self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y)
+        return "<boundingBox box_type:{} bound_text:{} tl:({},{}) tr:({},{}) bl:({},{}) br:({},{}) words: {} >".format(self.box_type, self.bound_text, self.tl.x, self.tl.y, 
+            self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y, self.words)
 
     def __str__(self):  # print statement
-        return "box_type:%s \nbound_text:%s \ntl:(%s,%s) \ntr:(%s,%s) \nbl:(%s,%s) \nbr:(%s,%s)" %(self.box_type, self.bound_text, self.tl.x, self.tl.y, 
-            self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y)
+        return "box_type:{} \nbound_text:{} \ntl:({},{}) \ntr:({},{}) \nbl:({},{}) \nbr:({},{})\nwords: {}".format(self.box_type, self.bound_text, self.tl.x, self.tl.y, 
+            self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y, self.words)
 
 
 def preprocess(input_image):
@@ -90,7 +92,8 @@ def parse_azure_json(azure_json):
 
     # initialize
     c = coordinate(0, 0)
-    bb = boundingBox(c, c, c, c, "", "W")
+    bb = boundingBox(c, c, c, c, "", "L", [])
+    bb_word = boundingBox(c, c, c, c, "", "W", []) 
     llist = []
     for i in range(slen):
         line = sentence[i]["words"]
@@ -101,18 +104,18 @@ def parse_azure_json(azure_json):
         bb.br = coordinate(line_box[2], line_box[3])
         bb.tr = coordinate(line_box[4], line_box[5])
         bb.tl = coordinate(line_box[6], line_box[7])
-        llist.append(copy.deepcopy(bb))
         llen = len(line)
         for j in range(llen):
             word_box = line[j]["boundingBox"]
             word = line[j]["text"]
-            bb.box_type = "W"
-            bb.bl = coordinate(word_box[0], word_box[1])
-            bb.br = coordinate(word_box[2], word_box[3])
-            bb.tr = coordinate(word_box[4], word_box[5])
-            bb.tl = coordinate(word_box[6], word_box[7])
-            bb.bound_text = word
-            llist.append(copy.deepcopy(bb))
+            bb_word.box_type = "W"
+            bb_word.bl = coordinate(word_box[0], word_box[1])
+            bb_word.br = coordinate(word_box[2], word_box[3])
+            bb_word.tr = coordinate(word_box[4], word_box[5])
+            bb_word.tl = coordinate(word_box[6], word_box[7])
+            bb_word.bound_text = word
+            bb.words.append(copy.deepcopy(bb_word))
+        llist.append(copy.deepcopy(bb))
     return llist
 
 
