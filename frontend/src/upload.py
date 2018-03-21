@@ -1,4 +1,5 @@
 from flask import Flask, url_for, send_from_directory, request
+import imghdr
 import time
 import logging, os
 from werkzeug import secure_filename
@@ -26,14 +27,18 @@ def api_root():
     if request.method == 'POST' and request.files['image']:
     	app.logger.info(app.config['UPLOAD_FOLDER'])
     	img = request.files['image']
-    	img_name = time.strftime("%Y%m%d-%H%M%S")
+    	imgname = time.strftime("%Y%m%d-%H%M%S")
+        x=imghdr.what(img)
+        img_name=imgname+'.'+x
     	create_new_folder(app.config['UPLOAD_FOLDER'])
     	saved_path = os.path.join(app.config['UPLOAD_FOLDER'], img_name)
     	app.logger.info("saving {}".format(saved_path))
     	img.save(saved_path)
     	return send_from_directory(app.config['UPLOAD_FOLDER'],img_name, as_attachment=True)
     else:
-    	return "Where is image?"
+    	@app.errorhandler(400)
+        def page_not_found(error):
+               return {'error': 'bad request'}, 400
 
 if __name__ == '__main__':
          app.run(host='0.0.0.0', debug=False)
