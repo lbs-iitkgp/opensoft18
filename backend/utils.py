@@ -157,8 +157,8 @@ def draw_box(in_img, l_boxes):
             cv2.polylines(in_img, [vertices], True, red, thickness=1, lineType=cv2.LINE_AA)
 
     # uncomment below lines while debugging
-#    cv2.imshow("debug", in_img)
-#    cv2.waitKey(0)
+    # cv2.imshow("debug", in_img)
+    # cv2.waitKey(0)
 
     return in_img
     
@@ -192,8 +192,8 @@ def put_text(in_img, l_boxes):
                         thickness=1, lineType=cv2.LINE_AA)
 
     # while debugging and calibrating, uncomment below lines
-#    cv2.imshow("test", out_img)
-#    cv2.waitKey(0)
+    # cv2.imshow("test", out_img)
+    # cv2.waitKey(0)
 
     return out_img
 
