@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+9#!/usr/bin/env python3
 
 import time
 import cv2
@@ -8,6 +8,7 @@ import img2pdf
 import pre_process as pp
 import parse_name as pn
 import numpy as np
+from spellcheck.spellcheck import spellcor 
 
 
 class coordinate:
@@ -199,4 +200,4 @@ def put_text(in_img, l_boxes):
 
 
 if __name__ == '__main__':
-    print("Hello!")
+    print("hello!")
