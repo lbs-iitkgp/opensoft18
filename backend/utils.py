@@ -6,7 +6,7 @@ import copy
 import img2pdf
 import pre_process as pp
 import parse_name as pn
-
+import numpy as np
 
 class coordinate:
     x = 0
@@ -139,10 +139,28 @@ def fix_spelling(bounding_box):
     # return bounding box
     return bounding_box
 
+def crop_image(input_image,x1,x2,y1,y2):
+    crop_image=input_image[y1:y2, x1:x2]
+    return crop_image
 
-def replace_image_with_text(input_image, list_of_bounding_boxes):
-    in_image = cv2.imread(input_image)
-    out_image = in_image
+def replace_image_with_text(input_image, llist):
+
+    for i in llist
+        img = cv2.imread('input_image', 0)
+        x1 = i.tl.x
+        x2 = i.br.x
+        y1 = i.tl.y
+        y2 = i.br.y
+        crop = crop_image('img',x1,x2,y1,y2)
+        kernel = np.ones((5,5), np.uint8)
+        img_erosion = cv2.erode(crop, kernel, iterations=5)
+        img_dilation = cv2.dilate(img_erosion, kernel, iterations=60)
+        out_image = img_dilation
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        h=y1-y2
+        font-scale = (h/12)/2
+        cv2.putText(out_image,i.bound_text, (x1,y2) , font, font-scale, (0,0,0) , 2 ,cv2.LINE_AA)
+
     return out_image
 
 
