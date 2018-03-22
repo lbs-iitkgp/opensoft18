@@ -42,7 +42,7 @@ dicts['5'] = list('s')
 def words(text):
     return re.findall(r'\w+', text.lower())
 
-DATA = open(os.path.join(current,'medvocab.txt')).read()+'\n'+open(os.path.join(current,'engvocab.txt')).read()
+DATA = open(os.path.join(current,'resources', 'medvocab.txt')).read()+'\n'+open(os.path.join(current,'resources', 'engvocab.txt')).read()
 WORDS = Counter(words(DATA))
 
 def P(word, N=sum(WORDS.values())): 
