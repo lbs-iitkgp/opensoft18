@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 
 import time
-import cv2
 import json
 import copy
+import operator
+
+import numpy as np
 import img2pdf
+import cv2
+
 import pre_process as pp
 import parse_name as pn
-import numpy as np
-
+import lexigram
+import spellcheck_azure
+import spellcheck_custom
 
 class coordinate:
     x = 0
@@ -73,7 +78,6 @@ def get_names(in_str):
     """
     return pn.extract(in_str)
 
-
 def get_azure_ocr(input_image):
     azure_json = {}
     return azure_json
@@ -133,14 +137,38 @@ def get_parallel_boxes(bounding_boxes):
 
 
 def get_lexigram(bounding_boxes):
+    """
+    Extracts all possible metadata from all the bounding boxes
+    :param bounding_box: a bounding box with bound_text
+    :return: bounding_box: a bounding box with spell-fixed bound_text
+    """
+
     lexigram_json = {}
+    for bounding_box in bounding_boxes:
+        individual_json = lexigram.extract_metadata_json(bounding_box.bound_text)
+        for key in individual_json:
+            if key not in lexigram_json:
+                lexigram_json[key] = set()
+            lexigram_json[key] = lexigram_json[key].union(individual_json[key])
+
     return lexigram_json
 
-
 def fix_spelling(bounding_box):
-    # return bounding box
-    return bounding_box
+    """
+    Fixes spelling based on Azure spellchecker, metadata extraction and custom spellchecker
+    :param bounding_box: a bounding box with bound_text
+    :return: bounding_box: a bounding box with spell-fixed bound_text
+    """
 
+    text = bounding_box.bound_text
+    text = spellcheck_azure.make_correction(text)
+    if lexigram.extract_metadata_json(text):
+        bounding_box.bound_text = text
+        return bounding_box
+
+    text = spellcheck_custom.spellcor(text)
+    bounding_box.bound_text = text
+    return bounding_box
 
 def draw_box(in_img, l_boxes):
     """
@@ -199,4 +227,4 @@ def put_text(in_img, l_boxes):
 
 
 if __name__ == '__main__':
-    print("Hello!")
+    print("hello!")

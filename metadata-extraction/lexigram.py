@@ -1,7 +1,7 @@
 import os
 from os.path import join, dirname
-from dotenv import load_dotenv
-load_dotenv(join(dirname(__file__), '.env'))
+import dotenv
+dotenv.load(join(dirname(__file__), '.env'))
 
 import requests
 import operator
@@ -16,11 +16,28 @@ def fetch_response(endpoint, query):
   '''
   return(requests.get(endpoint, headers={'Authorization': 'Bearer '+LEXIGRAM_KEY}, params={'text': query, 'withContext': True, 'withMatchLogic': 'longest', 'withText': False}).json())
 
+def has_medicine(query):
+  matches = fetch_response('https://api.lexigram.io/v1/extract/entities', query)['matches']
+  for match in matches:
+    if 'DRUGS' in match['types']:
+      return(True)
+  return(False)
+
 def fetch_search_response(endpoint, query):
   '''
   GETS the spellcheck endpoint response
   '''
   return(requests.get(endpoint, headers={'Authorization': 'Bearer '+LEXIGRAM_KEY}, params={'q': query, 'limit': 20}).json())
+
+def extract_metadata_json(query):
+  metadata = {}
+  matches = fetch_response('https://api.lexigram.io/v1/extract/entities', query)['matches']
+  for match in matches:
+    for match_type in match['types']:
+      if match_type not in metadata:
+        metadata[match_type] = set()
+      metadata[match_type].add(match['label'])
+  return(metadata)
 
 def extract_data(query):
   print(fetch_response('https://api.lexigram.io/v1/extract/entities', query))
@@ -36,5 +53,6 @@ if __name__ == "__main__":
   2. Run this script like, `python3 azure_spellcheck.py 'Amoxicillin (10)'`.
   '''
   query = argv[1] # For example, 'Amoxicillin (10)'
+  print(has_medicine(query))
+  print(extract_metadata_json(query))
   extract_data(query)
-  # print(data)
