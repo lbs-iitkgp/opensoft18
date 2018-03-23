@@ -1,4 +1,5 @@
-import sys
+#!/usr/bin/env python3
+
 import time
 import cv2
 import json
@@ -33,7 +34,7 @@ class boundingBox:
         :param bl: coordinates of bottom left
         :param br: coordinates of bottom right
         :param bound_text: The text inside the box
-        :param box_type: catagorize the boxx as line(L)/word(W)
+        :param box_type: categorize the box as line(L)/word(W)
         """
 
         self.tl = tl
@@ -44,12 +45,12 @@ class boundingBox:
         self.box_type = box_type
 
     def __repr__(self):  # object definition
-        return "<boundingBox box_type:%s bound_text:%s tl:(%s,%s) tr:(%s,%s) bl:(%s,%s) br:(%s,%s)>" %(self.box_type, self.bound_text, self.tl.x, self.tl.y, 
-            self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y)
+        return "<boundingBox box_type:%s bound_text:%s tl:(%s,%s) tr:(%s,%s) bl:(%s,%s) br:(%s,%s)>" % (self.box_type,
+            self.bound_text, self.tl.x, self.tl.y, self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y)
 
     def __str__(self):  # print statement
-        return "box_type:%s \nbound_text:%s \ntl:(%s,%s) \ntr:(%s,%s) \nbl:(%s,%s) \nbr:(%s,%s)" %(self.box_type, self.bound_text, self.tl.x, self.tl.y, 
-            self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y)
+        return "box_type:%s \nbound_text:%s \ntl:(%s,%s) \ntr:(%s,%s) \nbl:(%s,%s) \nbr:(%s,%s)" % (self.box_type,
+            self.bound_text, self.tl.x, self.tl.y, self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y)
 
 
 def preprocess(input_image):
@@ -144,24 +145,79 @@ def crop_image(input_image,x1,x2,y1,y2):
     return crop_image
 
 def replace_image_with_text(input_image, llist):
-
-    for i in llist
-        img = cv2.imread('input_image', 0)
-        x1 = i.tl.x
-        x2 = i.br.x
-        y1 = i.tl.y
-        y2 = i.br.y
-        crop = crop_image('img',x1,x2,y1,y2)
-        kernel = np.ones((5,5), np.uint8)
-        img_erosion = cv2.erode(crop, kernel, iterations=5)
-        img_dilation = cv2.dilate(img_erosion, kernel, iterations=60)
-        out_image = img_dilation
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        h=y1-y2
-        font-scale = (h/12)/2
-        cv2.putText(out_image,i.bound_text, (x1,y2) , font, font-scale, (0,0,0) , 2 ,cv2.LINE_AA)
-
+    for i in llist:
+        if i.box_type == 'L':
+            img = cv2.imread(input_image, 0)
+            x1 = i.tl.x
+            x2 = i.br.x
+            y1 = i.tl.y
+            y2 = i.br.y
+            crop = crop_image('img',x1,x2,y1,y2)
+            kernel = np.ones((5,5), np.uint8)
+            img_erosion = cv2.erode(crop, kernel, iterations=5)
+            img_dilation = cv2.dilate(img_erosion, kernel, iterations=60)
+            out_image = img_dilation
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            h=y1-y2
+            font-scale = (h/12)/2
+            cv2.putText(out_image,i.bound_text, (x1,y2) , font, font-scale, (0,0,0) , 2 ,cv2.LINE_AA)
     return out_image
+
+
+def draw_box(in_img, l_boxes):
+    """
+    draw red bounding boxes for line ('L') box_types
+    :param in_img: input image in opencv format
+    :param l_boxes: list of bounding boxes to be drawn
+    :return: in_img: image (in opencv format) after drawing boxes in red
+    """
+    red = (0, 0, 255)  # opencv follows bgr pattern
+    for box in l_boxes:
+        if box.box_type == 'L':
+            vertices = np.array([[box.tl.x, box.tl.y], [box.tr.x, box.tr.y], [box.br.x, box.br.y],
+                                 [box.bl.x, box.bl.y]], np.int32)
+            cv2.polylines(in_img, [vertices], True, red, thickness=1, lineType=cv2.LINE_AA)
+
+    # uncomment below lines while debugging
+    # cv2.imshow("debug", in_img)
+    # cv2.waitKey(0)
+
+    return in_img
+    
+
+def put_text(in_img, l_boxes):
+    """
+    put extracted text (in black) over the place of original text
+    :param in_img: cleaned image in opencv format
+    :param l_boxes: list of bounding boxes
+    :return: out_img: a separate image with text placed at right places
+    """
+    out_img = in_img
+    font = cv2.FONT_HERSHEY_DUPLEX
+    font_color = (0, 0, 0)
+    # multiplying factor used to calculate font_scale in relation to height
+    factor = .03
+
+    for box in l_boxes:
+        if box.box_type == 'W':
+
+            height = box.bl.y - box.tl.y
+            width = box.tr.x - box.tl.x
+
+            font_scale = factor * height
+            text_size = cv2.getTextSize(box.bound_text, font, font_scale, thickness=1)
+            # to put text in middle of the bounding box
+            text_x_center = int(box.bl.x + ((width / 2) - (text_size[0][0] / 2)))
+            text_y_center = int(box.bl.y - ((height / 2) - (text_size[0][1] / 2)))
+
+            cv2.putText(out_img, box.bound_text, (text_x_center, text_y_center), font, font_scale, font_color,
+                        thickness=1, lineType=cv2.LINE_AA)
+
+    # while debugging and calibrating, uncomment below lines
+    # cv2.imshow("test", out_img)
+    # cv2.waitKey(0)
+    return out_img
+
 
 
 if __name__ == '__main__':
