@@ -1,9 +1,17 @@
 # Visual Studio code settings
 .vscode
-.env
-vision-api/output.png
 
+# IntelliJ settings
 .idea/
+
+# Runtime images
 in.jpg
+vision-api/output.png
 backend/image
 frontend/image
+
+# Yarn errors
+yarn-error.log
+
+# Env settings
+.env
