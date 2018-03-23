@@ -1,5 +1,4 @@
 .App {
-  text-align: center;
   min-height: 100vh;
 }
 
@@ -33,13 +32,41 @@
 }
 
 .App-main {
-  padding: 10px;
   color: white;
-  background: #141414;
+  background: #18192b;
   min-height: 100vh;
 }
 
+.main-content {
+  padding: 30px;
+}
+
+.app-title-text {
+  padding-bottom: 10px;
+}
+
+.new-image {
+  text-align: right;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.new-image:hover {
+  color: #eb575d;
+}
+
 .App-title {
-  font-size: 1.5em;
-  font-family: 'Roboto Slab', serif;
+  font-size: 2rem;
+  font-family: 'Pacifico', cursive;
+}
+
+.original-preview {
+  height: 80vh;
+  width: auto;
+}
+
+.original-preview img {
+  max-height: 100%;
+  max-width: 100%;
 }

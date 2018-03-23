@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import Dropzone from 'react-dropzone';
-import Samples from './components/samples';
-import './App.css';
-import SimpleReactFileUpload from './fileUpload';
+// import Samples from './components/samples';
+import './styles/App.css';
+import './styles/dropzone.css';
+import './styles/flexboxgrid/flexboxgrid.min.css';
 
 class App extends Component {
   constructor() {
@@ -11,6 +12,7 @@ class App extends Component {
     this.state = { preview: null };
 
     this.onDrop = this.onDrop.bind(this);
+    this.resetImage = this.resetImage.bind(this);
   }
 
   onDrop(acceptedFiles) {
@@ -33,6 +35,12 @@ class App extends Component {
     });
   }
 
+  resetImage() {
+    this.setState({
+      preview: null,
+    });
+  }
+
   render() {
     return (
       <div className="App">
@@ -46,21 +54,45 @@ class App extends Component {
           <div className="welcome-bottom" />
         </div>
         <header className="App-main">
-          <h1 className="App-title">
-            Welcome to DigiCon
-          </h1>
-          <Samples />
-          <SimpleReactFileUpload />
-          <Dropzone
-            onDrop={this.onDrop}
-            accept="image/*"
-            multiple={false}
-          >
-            <p>Try dropping some files here, or click to select files to upload.</p>
-          </Dropzone>
-          {
-            this.state.preview && <img src={this.state.preview} alt="Uploaded preview" />
-          }
+          <div className="main-content">
+            <div className="row middle-xs app-title-text">
+              <div className="App-title col-xs-6">
+                DigiCon
+              </div>
+              {
+                this.state.preview &&
+                <div
+                  className="new-image col-xs-6"
+                  onClick={() => this.resetImage()}
+                  onKeyPress={() => this.resetImage()}
+                  role="button"
+                  tabIndex={0}
+                >
+                  New image
+                </div>
+              }
+            </div>
+            {/* <Samples /> */}
+            {
+              !this.state.preview &&
+              <Dropzone
+                onDrop={this.onDrop}
+                accept="image/*"
+                multiple={false}
+                className="image-dropzone"
+              >
+                <p>
+                  Try dropping a prescription here, or click to select a prescription to upload.
+                </p>
+              </Dropzone>
+            }
+            {
+              this.state.preview &&
+              <div className="original-preview">
+                <img src={this.state.preview} alt="Uploaded preview" />
+              </div>
+            }
+          </div>
         </header>
       </div>
     );
