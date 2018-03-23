@@ -1,12 +1,7 @@
-#!/usr/bin/python3
-# spellcheck.py
-
 import re
+import os
 from collections import Counter
 from sys import argv
-import os
-
-current = os.path.dirname(__file__)
 
 dicts = {}
 dicts['a'] = list('bdou')
@@ -14,9 +9,9 @@ dicts['b'] = list('hlt')
 dicts['c'] = list('eo')
 dicts['d'] = list('ao')
 dicts['e'] = list('c')
-dicts['f'] = list('')
+dicts['f'] = list('l')
 dicts['g'] = list('pqy')
-dicts['h'] = list('bn')
+dicts['h'] = list('tbn')
 dicts['i'] = list('jlt')
 dicts['j'] = list('giy')
 dicts['k'] = list('bx')
@@ -29,20 +24,27 @@ dicts['q'] = list('gpy')
 dicts['r'] = list('cnx')
 dicts['s'] = list('cz')
 dicts['t'] = list('fl')
-dicts['u'] = list('ovy')
+dicts['u'] = list('ovwy')
 dicts['v'] = list('uw')
-dicts['w'] = list('v')
-dicts['x'] = list('')
+dicts['w'] = list('vu')
+dicts['x'] = list('v')
 dicts['y'] = list('gjq')
 dicts['z'] = list('s')
-dicts['6'] = list('b')
-dicts['('] = list('c')
-dicts['5'] = list('s')
+dicts['6'] = 'b'
+dicts['2'] = 'z'
+dicts['3'] = 'b'
+dicts['8'] = 'b'
+dicts['9'] = 'g'
+dicts['('] = 'c'
+dicts['5'] = 's'
+dicts['1'] = 'l'
+dicts['0'] = '0'
+misc = '12356890('
 
-def words(text):
-    return re.findall(r'\w+', text.lower())
+def words(text): return re.findall(r'\w+', text.lower())
 
-DATA = open(os.path.join(current,'resources', 'medvocab.txt')).read()+'\n'+open(os.path.join(current,'resources', 'engvocab.txt')).read()
+current = os.path.dirname(__file__)
+DATA = open(os.path.join(current,'medvocab.txt')).read()+'\n'+open(os.path.join(current,'engvocab.txt')).read()
 WORDS = Counter(words(DATA))
 
 def P(word, N=sum(WORDS.values())): 
@@ -51,17 +53,19 @@ def P(word, N=sum(WORDS.values())):
 
 def correction(word): 
     "Most probable spelling correction for word."
-    return max(candidates(word,len(word)), key=P)
+    return max(candidates(word), key=P)
 
-def candidates(word,n): 
+def candidates(word): 
     "Generate possible spelling corrections for word."
-    k = known([word]) or known(edits1(word))
-    if n==1:
-        return k or [word]
-    for i in range(n-1): 
-        k = k or known(editsn(word,i+2))
-    k = k or [word]
-    return k
+    if len(word) <= 3:
+        return(known([word]) or known(edi_del(word)) or [word])
+    elif len(word) <= 6:
+        return(known([word]) or known(edi_del(word)) or known(edi_del2(word)) or [word])
+    else :
+        temp = known([word]) or known(edi_del(word)) or known(edi_del2(word))
+        if bool(temp):
+            return temp
+        return(temp or known(edits3(word)) or [word])
 
 def known(words): 
     "The subset of `words` that appear in the dictionary of WORDS."
@@ -71,78 +75,51 @@ def edits1(word):
     "All edits that are one edit away from `word`."
     letters    = 'abcdefghijklmnopqrstuvwxyz'
     splits     = [(word[:i], word[i:])    for i in range(len(word) + 1)]
-    deletes    = [L + R[1:]               for L, R in splits if R]
+    # deletes    = [L + R[1:]               for L, R in splits if R]
     transposes = [L + R[1] + R[0] + R[2:] for L, R in splits if len(R)>1]
-    replaces   = [L + c + R[1:]           for L, R in splits if R for c in letters]
+    replaces   = [L + c + R[1:]           for L, R in splits if R for c in dicts[R[0]]]
     inserts    = [L + c + R               for L, R in splits for c in letters]
-    return set(deletes + transposes + replaces + inserts)
+    return set(transposes + replaces + inserts)
 
-def editsn(word,n): 
+def delete(word):
+    "Checks for a delete"
+    splits     = [(word[:i], word[i:])    for i in range(len(word) + 1)]
+    deletes    = [L + R[1:]               for L, R in splits if R]
+    return set(deletes)
+
+def edi_del(word):
+    return delete(word).union(edits1(word))
+
+def edi_del2(word):
+    return delete(word).union(edits2(word))
+
+def edits2(word): 
     "All edits that are two edits away from `word`."
-    if n==1:
-        return edits1(word)
-    else :
-        return (e2 for e1 in editsn(word,n-1) for e2 in edits1(e1))
+    return (e2 for e1 in edi_del(word) for e2 in edits1(e1))
 
-def visualsim(word):
-    "Matching visually similar letters"
-    k = list(word)
-    check = []
-    for b,count in enumerate(k):
-        for x in dicts[count]:
-            h = list(word)
-            h[b] = x
-            check.append(''.join(h))
-    return check
+def edits3(word):
+    "All edits that are three edits away from `word`."
+    return (e3 for e2 in edits2(word) for e3 in edits1(e2))
 
-def visualsimn(word,n):
-    check = []
-    if n==1:
-        return visualsim(word)
-    else:
-        hi = visualsimn(word,n-1)
-        for kri in hi:
-            for b,count in enumerate(kri):
-                for x in dicts[count]:
-                    h = list(word)
-                    h[b] = x
-                    check.append(''.join(h))
-        return check + hi
-
-def vsimcandidates(word,n): 
-    "Generate possible spelling corrections for word."
-    k = known([word]) or known(visualsim(word))
-    if n==1:
-        return k or [word]
-    for i in range(n-1): 
-        k = k or known(visualsimn(word,i+2))
-    return k
-
-def vsimcorrection(word): 
-    "Most probable spelling correction for word."
-    the = vsimcandidates(word,len(word))
-    if bool(the):
-        return max(the, key=P)
-    else:
-        return "#@!"
-        
-def correctspaces(word):
-    "Returns the appropriate word which contains atmost two whitespaces."
-    
-    if word.count(' ') <= 2:
-        return word
-        
-    word = word.replace(' ', '', 1)
-    return correctspaces(word)
+# def edits4(word):
+#     "All edits that are three edits away from `word`."
+#     return (e4 for e3 in edits3(word) for e4 in edits1(e2))
 
 def spellcor(word):
     word = word.lower()
-    store = vsimcorrection((word))
+    # while word.count(' ') > 2:
+    #     word = word.replace(' ', '', 1)
+    words = list(word)
+    for count,s in enumerate(words):
+        if s in list(misc):
+            words[count] = dicts[s]
+    word = ''.join(words)
 
-    if store == "#@!":
-        return correction((word))
-    else :
-        return correction(word)      
+    if word in WORDS:
+        return word
+    
+    return correction(word)
 
 if __name__ == "__main__":
     print(spellcor(argv[1]))
+
