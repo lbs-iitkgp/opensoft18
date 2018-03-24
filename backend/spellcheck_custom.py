@@ -44,7 +44,7 @@ misc = '12356890('
 def words(text): return re.findall(r'\w+', text.lower())
 
 current = os.path.dirname(__file__)
-spellcheckfol = os.path.join(current,'../spellcheck')
+spellcheckfol = os.path.join(current,'resources')
 DATA = open(os.path.join(spellcheckfol,'medvocab.txt')).read()+'\n'+open(os.path.join(spellcheckfol,'engvocab.txt')).read()
 WORDS = Counter(words(DATA))
 
