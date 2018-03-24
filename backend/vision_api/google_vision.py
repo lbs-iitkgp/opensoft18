@@ -24,7 +24,6 @@ with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'google_samp
     SAMPLE_RESPONSE = pickle.load(input)
 
 def parse_google_ocr(ocr_response):
-    print(type(ocr_response))
     # Collect specified feature bounds by enumerating all document features
     sentence_bounds = []
     word_bounds = []
@@ -40,17 +39,18 @@ def parse_google_ocr(ocr_response):
                     sentence_string = sentence_string + word_string + ' '
                     word_bbox = word.bounding_box
                     word_bbox_object = boundingBox(
-                        coordinate(word_bbox.vertices[0].x, word_bbox.vertices[0].x),
-                        coordinate(word_bbox.vertices[1].x, word_bbox.vertices[1].x),
-                        coordinate(word_bbox.vertices[2].x, word_bbox.vertices[2].x),
-                        coordinate(word_bbox.vertices[3].x, word_bbox.vertices[3].x),
-                        word_string, 'W')
+                        coordinate(word_bbox.vertices[0].x, word_bbox.vertices[0].y),
+                        coordinate(word_bbox.vertices[1].x, word_bbox.vertices[1].y),
+                        coordinate(word_bbox.vertices[3].x, word_bbox.vertices[3].y),
+                        coordinate(word_bbox.vertices[2].x, word_bbox.vertices[2].y),
+                        word_string, 'W'
+                    )
                     word_bounds.append(word_bbox_object)
                 sentence_bbox_object = boundingBox(
-                    coordinate(sentence_bbox.vertices[0].x, sentence_bbox.vertices[0].x),
-                    coordinate(sentence_bbox.vertices[1].x, sentence_bbox.vertices[1].x),
-                    coordinate(sentence_bbox.vertices[2].x, sentence_bbox.vertices[2].x),
-                    coordinate(sentence_bbox.vertices[3].x, sentence_bbox.vertices[3].x),
+                    coordinate(sentence_bbox.vertices[0].x, sentence_bbox.vertices[0].y),
+                    coordinate(sentence_bbox.vertices[1].x, sentence_bbox.vertices[1].y),
+                    coordinate(sentence_bbox.vertices[3].x, sentence_bbox.vertices[3].y),
+                    coordinate(sentence_bbox.vertices[2].x, sentence_bbox.vertices[2].y),
                     sentence_string, 'L'
                 )
                 sentence_bounds.append(sentence_bbox_object)

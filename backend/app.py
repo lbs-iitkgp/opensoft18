@@ -2,7 +2,9 @@
 """
 Main flask process
 """
-from flask import Flask, url_for, send_from_directory, request
+from flask import Flask, url_for, send_file, send_from_directory, request, Response
+from flask_cors import CORS
+import base64
 import time
 import logging, os
 import requests
@@ -10,6 +12,7 @@ from utils import add_to_pipeline
 from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
+CORS(app)
 socketio = SocketIO(app)
 
 REQUESTS_SESSION = requests.Session()
@@ -34,6 +37,15 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def stream_output(upload_folder, temp_folder, file_name):
+    for output_index, output_object in enumerate(add_to_pipeline(upload_folder, temp_folder, file_name)):
+        if output_index == 0:
+            with open(output_object, "rb") as image_file:
+                encoded_image = base64.b64encode(image_file.read())
+            yield encoded_image
+        else:
+            yield output_object
+
 @app.route('/', methods=['GET'])
 def index():
     """
@@ -46,6 +58,7 @@ def api_root():
     app.logger.info(PROJECT_HOME)
     try:
         img = request.files['image']
+        print(img)
         if request.method == 'POST' and img and allowed_file(img.filename):
             app.logger.info(app.config['UPLOAD_FOLDER'])
             img = request.files['image']
@@ -55,8 +68,8 @@ def api_root():
             saved_path = os.path.join(app.config['UPLOAD_FOLDER'], file_name)
             app.logger.info("saving {}".format(saved_path))
             img.save(saved_path)
-            add_to_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], file_name)
-            return ("Image uploaded successfully", 200, {})
+            return Response(stream_output(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], file_name))
+            # return ("Image uploaded successfully", 200, {})
         else:
             return ("No image sent", 401, {})
     except Exception as e:
@@ -76,4 +89,4 @@ def handle(data):
 
 if __name__ == "__main__":
     # app.run(debug=True, host='0.0.0.0', port=8080, use_reloader=False)
-    socketio.run(app,debug=True, host='0.0.0.0', port=8080)
+    socketio.run(app,debug=True, host='0.0.0.0', port=8080, use_reloader=False)

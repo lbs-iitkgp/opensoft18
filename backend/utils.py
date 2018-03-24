@@ -3,7 +3,7 @@
 import time
 import json
 import operator
-
+import os
 import numpy as np
 import img2pdf
 import cv2
@@ -97,7 +97,7 @@ def remove_text(input_image, bb_object):
         out_image = img_dilation
         return out_image
 
-def draw_box(in_img, l_boxes):
+def draw_box(in_img, l_boxes, l_type='L'):
     """
     draw red bounding boxes for line ('L') box_types
     :param in_img: input image in opencv format
@@ -106,7 +106,7 @@ def draw_box(in_img, l_boxes):
     """
     red = (0, 0, 255)  # opencv follows bgr pattern
     for box in l_boxes:
-        if box.box_type == 'L':
+        if box.box_type == l_type:
             vertices = np.array([[box.tl.x, box.tl.y], [box.tr.x, box.tr.y], [box.br.x, box.br.y],
                                  [box.bl.x, box.bl.y]], np.int32)
             cv2.polylines(in_img, [vertices], True, red, thickness=1, lineType=cv2.LINE_AA)
@@ -159,9 +159,19 @@ def add_to_pipeline(images_path, temp_path, image_name):
     preprocessed_image = input_image
 
     # Get OCR data
-    # ocr_data = google_vision.get_google_ocr(input_image)
-    ocr_data = azure_vision.get_azure_ocr(input_image)
-    print(ocr_data)
+    ocr_data = google_vision.get_google_ocr(preprocessed_image)
+    # ocr_data = azure_vision.get_azure_ocr(preprocessed_image)
+
+    # Draw bounding boxes around words
+    bbl_image_object = cv2.imread(
+        os.path.join(preprocessed_image.images_path, preprocessed_image.image_name))
+    draw_box(bbl_image_object, ocr_data)
+    # cv2.imshow('bbl_image_object', bbl_image_object)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    bbl_image = os.path.join(input_image.temp_path, "bbl" + input_image.image_name)
+    cv2.imwrite(bbl_image, bbl_image_object)
+    yield bbl_image
 
 if __name__ == '__main__':
     print("hello!")

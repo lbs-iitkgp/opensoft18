@@ -9,7 +9,10 @@ import './styles/flexboxgrid/flexboxgrid.min.css';
 class App extends Component {
   constructor() {
     super();
-    this.state = { preview: null };
+    this.state = {
+      preview: null,
+      outputObjects: [],
+    };
 
     this.onDrop = this.onDrop.bind(this);
     this.resetImage = this.resetImage.bind(this);
@@ -22,11 +25,18 @@ class App extends Component {
       });
       const formData = new FormData();
       formData.append('image', uploadedFile);
-      return axios.post('http://localhost:8080/upload', formData, {
+      return axios({
+        method: 'post',
+        url: 'http://localhost:8080/upload',
+        data: formData,
         headers: { 'content-type': 'multipart/form-data' },
+        responseType: 'stream',
       }).then((response) => {
         const { data } = response;
         console.log(data);
+        this.setState({
+          outputObjects: [...this.state.outputObjects, data],
+        });
       });
     });
 
@@ -38,6 +48,7 @@ class App extends Component {
   resetImage() {
     this.setState({
       preview: null,
+      outputObjects: [],
     });
   }
 
@@ -92,9 +103,17 @@ class App extends Component {
                 <div className="original-preview col-xs-4">
                   <img src={this.state.preview} alt="Uploaded preview" />
                 </div>
-                <div className="bboxes-preview col-xs-4">
-                  <img src={this.state.preview} alt="Bounding boxes preview" />
-                </div>
+                {
+                  this.state.outputObjects[0] != null ? (
+                    <div className="bboxes-preview col-xs-4">
+                      <img src={`data:image/jpeg;base64,${this.state.outputObjects[0]}`} alt="Bounding boxes preview" />
+                    </div>
+                  ) : (
+                    <div className="bboxes-preview col-xs-4">
+                      <img src={this.state.preview} alt="Bounding boxes preview" />
+                    </div>
+                  )
+                }
                 <div className="output-preview col-xs-4">
                   <img src={this.state.preview} alt="Output preview" />
                 </div>
