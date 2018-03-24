@@ -7,8 +7,11 @@ import time
 import logging, os
 import requests
 from utils import add_to_pipeline
+from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
+socketio = SocketIO(app)
+
 REQUESTS_SESSION = requests.Session()
 file_handler = logging.FileHandler('server.log')
 app.logger.addHandler(file_handler)
@@ -60,5 +63,17 @@ def api_root():
         app.logger.info(e)
         return ("Error occured:- "+str(e), 400, {})
 
+
+def heavy():  # we can put our entire pipeline here
+	time.sleep(2)
+	emit('final', "heavy done..final image is here")
+
+
+@socketio.on('sending', namespace='/test')
+def handle(data):
+	emit('success','connect hogaya '+str(data))
+	heavy()   # time consuming function here
+
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=8080, use_reloader=False)
+    # app.run(debug=True, host='0.0.0.0', port=8080, use_reloader=False)
+    socketio.run(app,debug=True, host='0.0.0.0', port=8080)
