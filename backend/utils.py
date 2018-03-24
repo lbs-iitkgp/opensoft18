@@ -179,7 +179,7 @@ def remove_text(input_image, bb_object):
     if bb_object.box_type == 'L':
         return input_image
 
-    else bb_object.box_type == 'W':
+    elif bb_object.box_type == 'W':
         img = cv2.imread(input_image, 0)
         x1 = bb_object.tl.x
         x2 = bb_object.br.x
