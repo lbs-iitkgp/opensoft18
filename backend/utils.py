@@ -170,6 +170,28 @@ def fix_spelling(bounding_box):
     bounding_box.bound_text = text
     return bounding_box
 
+def crop_image(input_image,x1,x2,y1,y2):
+    crop_out = input_image[y1:y2, x1:x2]
+    return crop_out
+
+def remove_text(input_image, bb_object):
+
+    if bb_object.box_type == 'L':
+        return input_image
+
+    else bb_object.box_type == 'W':
+        img = cv2.imread(input_image, 0)
+        x1 = bb_object.tl.x
+        x2 = bb_object.br.x
+        y1 = bb_object.tl.y
+        y2 = bb_object.br.y
+        crop = crop_image('img',x1,x2,y1,y2)
+        kernel = np.ones((5,5), np.uint8)
+        img_erosion = cv2.erode(crop, kernel, iterations=5)
+        img_dilation = cv2.dilate(img_erosion, kernel, iterations=60)
+        out_image = img_dilation
+        return out_image
+
 def draw_box(in_img, l_boxes):
     """
     draw red bounding boxes for line ('L') box_types
@@ -222,8 +244,8 @@ def put_text(in_img, l_boxes):
     # while debugging and calibrating, uncomment below lines
     # cv2.imshow("test", out_img)
     # cv2.waitKey(0)
-
     return out_img
+
 
 
 if __name__ == '__main__':
