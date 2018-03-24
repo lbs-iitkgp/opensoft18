@@ -1,12 +1,20 @@
 import io
 import os
 import pickle
+from enum import Enum
 
 # Imports the Google Cloud client library
 from google.cloud import vision
 from google.cloud.vision import types
 
-from utilities.digicon_classes import image_location
+from utilities.digicon_classes import coordinate, boundingBox, image_location
+
+class FeatureType(Enum):
+    PAGE = 1
+    BLOCK = 2
+    PARA = 3
+    WORD = 4
+    SYMBOL = 5
 
 # Instantiates a client
 CLIENT = vision.ImageAnnotatorClient()
@@ -17,7 +25,36 @@ with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'google_samp
 
 def parse_google_ocr(ocr_response):
     print(type(ocr_response))
-    return ocr_response
+    # Collect specified feature bounds by enumerating all document features
+    sentence_bounds = []
+    word_bounds = []
+    for page in ocr_response.pages:
+        for block in page.blocks:
+            for paragraph in block.paragraphs:
+                sentence_string = ''
+                sentence_bbox = paragraph.bounding_box
+                for word in paragraph.words:
+                    word_string = ''
+                    for symbol in word.symbols:
+                        word_string += symbol.text
+                    sentence_string = sentence_string + word_string + ' '
+                    word_bbox = word.bounding_box
+                    word_bbox_object = boundingBox(
+                        coordinate(word_bbox.vertices[0].x, word_bbox.vertices[0].x),
+                        coordinate(word_bbox.vertices[1].x, word_bbox.vertices[1].x),
+                        coordinate(word_bbox.vertices[2].x, word_bbox.vertices[2].x),
+                        coordinate(word_bbox.vertices[3].x, word_bbox.vertices[3].x),
+                        word_string, 'W')
+                    word_bounds.append(word_bbox_object)
+                sentence_bbox_object = boundingBox(
+                    coordinate(sentence_bbox.vertices[0].x, sentence_bbox.vertices[0].x),
+                    coordinate(sentence_bbox.vertices[1].x, sentence_bbox.vertices[1].x),
+                    coordinate(sentence_bbox.vertices[2].x, sentence_bbox.vertices[2].x),
+                    coordinate(sentence_bbox.vertices[3].x, sentence_bbox.vertices[3].x),
+                    sentence_string, 'L'
+                )
+                sentence_bounds.append(sentence_bbox_object)
+    return word_bounds + sentence_bounds
 
 def get_google_ocr(input_image):
     # The name of the image file to annotate
