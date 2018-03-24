@@ -16,6 +16,7 @@ import spellcheck_azure
 import spellcheck_custom
 
 from utilities.digicon_classes import coordinate, boundingBox, image_location
+from vision_api import google_vision
 
 def preprocess(input_image):
     """
@@ -24,9 +25,6 @@ def preprocess(input_image):
     :return: out_image: processed image in cv2 format
     """
     pp.notescan_main(input_image)
-    out_image = cv2.imread("output.png")
-    return out_image
-
 
 def get_names(in_str):
     """
@@ -208,7 +206,11 @@ def add_to_pipeline(images_path, temp_path, image_name):
     print(image_name)
     input_image = image_location(images_path, temp_path, image_name)
     # Pre-processing
-    preprocessed_image = preprocess(input_image)
+    # preprocessed_image = preprocess(input_image)
+    preprocessed_image = input_image
+
+    # Get OCR data
+    ocr_data = google_vision.get_google_ocr(input_image)
 
 if __name__ == '__main__':
     print("hello!")

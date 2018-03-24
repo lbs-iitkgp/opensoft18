@@ -19,7 +19,7 @@ app.logger.setLevel(logging.INFO)
 
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
-UPLOAD_FOLDER = '{}/images'.format(PROJECT_HOME)
+UPLOAD_FOLDER = '{}/input_images'.format(PROJECT_HOME)
 TEMP_FOLDER = '{}/temp_images'.format(PROJECT_HOME)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['TEMP_FOLDER'] = TEMP_FOLDER
