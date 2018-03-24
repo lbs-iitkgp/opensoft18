@@ -2,7 +2,6 @@
 
 import time
 import json
-import copy
 import operator
 
 import numpy as np
@@ -16,7 +15,7 @@ import spellcheck_azure
 import spellcheck_custom
 
 from utilities.digicon_classes import coordinate, boundingBox, image_location
-from vision_api import google_vision
+from vision_api import google_vision, azure_vision
 
 def preprocess(input_image):
     """
@@ -34,50 +33,6 @@ def get_names(in_str):
     """
     return pn.extract(in_str)
 
-def get_azure_ocr(input_image):
-    azure_json = {}
-    return azure_json
-
-
-def parse_azure_json(azure_json):
-    """
-    extract data from json created by Azure
-    :param azure_json: path to the json file
-    :return llist: list of boundings boxes of words
-    """
-
-    data = json.load(open(azure_json))
-    sentence = data["recognitionResult"]["lines"]
-    slen = len(sentence)
-
-    # initialize
-    c = coordinate(0, 0)
-    bb = boundingBox(c, c, c, c, "", "W")
-    llist = []
-    for i in range(slen):
-        line = sentence[i]["words"]
-        line_box = sentence[i]["boundingBox"]
-        bb.bound_text = sentence[i]["text"]
-        bb.box_type = "L"
-        bb.bl = coordinate(line_box[0], line_box[1])
-        bb.br = coordinate(line_box[2], line_box[3])
-        bb.tr = coordinate(line_box[4], line_box[5])
-        bb.tl = coordinate(line_box[6], line_box[7])
-        llist.append(copy.deepcopy(bb))
-        llen = len(line)
-        for j in range(llen):
-            word_box = line[j]["boundingBox"]
-            word = line[j]["text"]
-            bb.box_type = "W"
-            bb.bl = coordinate(word_box[0], word_box[1])
-            bb.br = coordinate(word_box[2], word_box[3])
-            bb.tr = coordinate(word_box[4], word_box[5])
-            bb.tl = coordinate(word_box[6], word_box[7])
-            bb.bound_text = word
-            llist.append(copy.deepcopy(bb))
-    return llist
-
-
 def img_to_pdf(image):  # name of the image as input
     pdf_bytes = img2pdf.convert([image])
     date_string = time.strftime("%Y-%m-%d-%H:%M:%S.pdf")
@@ -85,12 +40,6 @@ def img_to_pdf(image):  # name of the image as input
     file.write(pdf_bytes)
     file.close()
     return date_string
-
-
-def get_parallel_boxes(bounding_boxes):
-    list_of_boxes = []
-    return list_of_boxes
-
 
 def get_lexigram(bounding_boxes):
     """
@@ -210,7 +159,9 @@ def add_to_pipeline(images_path, temp_path, image_name):
     preprocessed_image = input_image
 
     # Get OCR data
-    ocr_data = google_vision.get_google_ocr(input_image)
+    # ocr_data = google_vision.get_google_ocr(input_image)
+    ocr_data = azure_vision.get_azure_ocr(input_image)
+    print(ocr_data)
 
 if __name__ == '__main__':
     print("hello!")

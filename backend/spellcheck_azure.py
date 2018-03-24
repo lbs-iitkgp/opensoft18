@@ -5,7 +5,7 @@ from os.path import join, dirname
 import operator
 import requests
 import dotenv
-dotenv.load(join(dirname(__file__), '.env'))
+dotenv.load_dotenv(join(dirname(__file__), '.env'))
 
 SPELLCHECK_ENDPOINT = 'https://api.cognitive.microsoft.com/bing/v7.0/spellcheck'
 SPELLCHECK_KEY = os.getenv('SPELLCHECK_KEY')

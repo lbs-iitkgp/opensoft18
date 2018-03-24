@@ -6,7 +6,7 @@ import requests
 import dotenv
 import parse_name as pn
 
-dotenv.load(join(dirname(__file__), '.env'))
+dotenv.load_dotenv(join(dirname(__file__), '.env'))
 LEXIGRAM_ENDPOINT = 'https://api.lexigram.io/v1/extract/entities'
 LEXIGRAM_KEY = os.getenv('LEXIGRAM_KEY')
 

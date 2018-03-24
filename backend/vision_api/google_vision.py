@@ -58,7 +58,7 @@ def parse_google_ocr(ocr_response):
 
 def get_google_ocr(input_image):
     # The name of the image file to annotate
-    file_name = os.path.join(os.path.join(input_image.images_path, input_image.image_name))
+    file_name = os.path.join(input_image.images_path, input_image.image_name)
 
     # Loads the image into memory
     with io.open(file_name, 'rb') as image_file:
