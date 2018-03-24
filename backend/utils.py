@@ -146,7 +146,7 @@ def crop_image(input_image,x1,x2,y1,y2):
 
 def remove_text(input_image, llist):
     
-    if i.box_type == 'L':
+    if llist.box_type == 'W':
         img = cv2.imread(input_image, 0)
         x1 = i.tl.x
         x2 = i.br.x
@@ -157,7 +157,7 @@ def remove_text(input_image, llist):
         img_erosion = cv2.erode(crop, kernel, iterations=5)
         img_dilation = cv2.dilate(img_erosion, kernel, iterations=60)
         out_image = img_dilation
-    return out_image
+        return out_image
 
 
 def draw_box(in_img, l_boxes):
