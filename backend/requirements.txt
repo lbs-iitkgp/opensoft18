@@ -5,3 +5,5 @@ nltk
 Flask
 Flask-Uploads
 img2pdf
+python-env
+opencv-python
