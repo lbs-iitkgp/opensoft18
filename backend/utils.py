@@ -171,17 +171,20 @@ def fix_spelling(bounding_box):
     return bounding_box
 
 def crop_image(input_image,x1,x2,y1,y2):
-    crop_image=input_image[y1:y2, x1:x2]
-    return crop_image
+    crop_out = input_image[y1:y2, x1:x2]
+    return crop_out
 
-def remove_text(input_image, llist):
-    
-    if llist.box_type == 'W':
+def remove_text(input_image, bb_object):
+
+    if bb_object.box_type == 'L':
+        return input_image
+
+    else bb_object.box_type == 'W':
         img = cv2.imread(input_image, 0)
-        x1 = i.tl.x
-        x2 = i.br.x
-        y1 = i.tl.y
-        y2 = i.br.y
+        x1 = bb_object.tl.x
+        x2 = bb_object.br.x
+        y1 = bb_object.tl.y
+        y2 = bb_object.br.y
         crop = crop_image('img',x1,x2,y1,y2)
         kernel = np.ones((5,5), np.uint8)
         img_erosion = cv2.erode(crop, kernel, iterations=5)
