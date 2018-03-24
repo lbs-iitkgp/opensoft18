@@ -88,8 +88,16 @@ class App extends Component {
             }
             {
               this.state.preview &&
-              <div className="original-preview">
-                <img src={this.state.preview} alt="Uploaded preview" />
+              <div className="row previews">
+                <div className="original-preview col-xs-4">
+                  <img src={this.state.preview} alt="Uploaded preview" />
+                </div>
+                <div className="bboxes-preview col-xs-4">
+                  <img src={this.state.preview} alt="Bounding boxes preview" />
+                </div>
+                <div className="output-preview col-xs-4">
+                  <img src={this.state.preview} alt="Output preview" />
+                </div>
               </div>
             }
           </div>
