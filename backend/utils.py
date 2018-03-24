@@ -15,49 +15,7 @@ import lexigram
 import spellcheck_azure
 import spellcheck_custom
 
-class coordinate:
-    x = 0
-    y = 0
-
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-
-class boundingBox:
-    bound_text = ''
-    box_type = ''
-    tl = coordinate(0, 0)
-    tr = coordinate(0, 0)
-    br = coordinate(0, 0)
-    bl = coordinate(0, 0)
-
-    def __init__(self, tl, tr, bl, br, bound_text, box_type):
-
-        """
-        :param tl: coordinates of top left
-        :param tr: coordinates of top right
-        :param bl: coordinates of bottom left
-        :param br: coordinates of bottom right
-        :param bound_text: The text inside the box
-        :param box_type: categorize the box as line(L)/word(W)
-        """
-
-        self.tl = tl
-        self.tr = tr
-        self.br = br
-        self.bl = bl
-        self.bound_text = bound_text
-        self.box_type = box_type
-
-    def __repr__(self):  # object definition
-        return "<boundingBox box_type:%s bound_text:%s tl:(%s,%s) tr:(%s,%s) bl:(%s,%s) br:(%s,%s)>" % (self.box_type,
-            self.bound_text, self.tl.x, self.tl.y, self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y)
-
-    def __str__(self):  # print statement
-        return "box_type:%s \nbound_text:%s \ntl:(%s,%s) \ntr:(%s,%s) \nbl:(%s,%s) \nbr:(%s,%s)" % (self.box_type,
-            self.bound_text, self.tl.x, self.tl.y, self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y)
-
+from utilities.digicon_classes import coordinate, boundingBox, image_location
 
 def preprocess(input_image):
     """
@@ -211,7 +169,7 @@ def draw_box(in_img, l_boxes):
     # cv2.waitKey(0)
 
     return in_img
-    
+
 
 def put_text(in_img, l_boxes):
     """
@@ -246,7 +204,11 @@ def put_text(in_img, l_boxes):
     # cv2.waitKey(0)
     return out_img
 
-
+def add_to_pipeline(images_path, temp_path, image_name):
+    print(image_name)
+    input_image = image_location(images_path, temp_path, image_name)
+    # Pre-processing
+    preprocessed_image = preprocess(input_image)
 
 if __name__ == '__main__':
     print("hello!")

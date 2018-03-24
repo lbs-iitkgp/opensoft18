@@ -5,8 +5,8 @@ Main flask process
 from flask import Flask, url_for, send_from_directory, request
 import time
 import logging, os
-from werkzeug import secure_filename
 import requests
+from utils import add_to_pipeline
 
 app = Flask(__name__)
 REQUESTS_SESSION = requests.Session()
@@ -16,9 +16,10 @@ app.logger.setLevel(logging.INFO)
 
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
-UPLOAD_FOLDER = '{}/image'.format(PROJECT_HOME)
+UPLOAD_FOLDER = '{}/images'.format(PROJECT_HOME)
+TEMP_FOLDER = '{}/temp_images'.format(PROJECT_HOME)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
+app.config['TEMP_FOLDER'] = TEMP_FOLDER
 
 def create_new_folder(local_dir):
     newpath = local_dir
@@ -46,9 +47,12 @@ def api_root():
             app.logger.info(app.config['UPLOAD_FOLDER'])
             img = request.files['image']
             create_new_folder(app.config['UPLOAD_FOLDER'])
-            saved_path = os.path.join(app.config['UPLOAD_FOLDER'], img.filename)
+            create_new_folder(app.config['TEMP_FOLDER'])
+            file_name = str(time.time()).replace('.', '') + "_" + img.filename.replace('/','')
+            saved_path = os.path.join(app.config['UPLOAD_FOLDER'], file_name)
             app.logger.info("saving {}".format(saved_path))
             img.save(saved_path)
+            add_to_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], file_name)
             return ("Image uploaded successfully", 200, {})
         else:
             return ("No image sent", 401, {})
