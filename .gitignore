@@ -7,7 +7,7 @@
 # Runtime images
 in.jpg
 vision-api/output.png
-backend/images
+backend/input_images
 backend/temp_images
 frontend/image
 
