@@ -30,12 +30,22 @@ class App extends Component {
         url: 'http://localhost:8080/upload',
         data: formData,
         headers: { 'content-type': 'multipart/form-data' },
-        responseType: 'stream',
+      }).then((response) => {
+        console.log(response);
+        const { data } = response;
+        console.log(data);
+        this.setState({
+          outputObjects: [...this.state.outputObjects, data.image],
+        });
+        return axios({
+          method: 'get',
+          url: `http://localhost:8080/continue/${data.image_name}`,
+        });
       }).then((response) => {
         const { data } = response;
         console.log(data);
         this.setState({
-          outputObjects: [...this.state.outputObjects, data],
+          outputObjects: [...this.state.outputObjects, data.image],
         });
       });
     });
@@ -114,9 +124,17 @@ class App extends Component {
                     </div>
                   )
                 }
-                <div className="output-preview col-xs-4">
-                  <img src={this.state.preview} alt="Output preview" />
-                </div>
+                {
+                  this.state.outputObjects[1] != null ? (
+                    <div className="bboxes-preview col-xs-4">
+                      <img src={`data:image/jpeg;base64,${this.state.outputObjects[1]}`} alt="Bounding boxes preview" />
+                    </div>
+                  ) : (
+                    <div className="bboxes-preview col-xs-4">
+                      <img src={this.state.preview} alt="Bounding boxes preview" />
+                    </div>
+                  )
+                }
               </div>
             }
           </div>

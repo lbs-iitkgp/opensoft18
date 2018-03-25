@@ -45,8 +45,10 @@ class image_location:
     images_path = ''
     temp_path = ''
     image_name = ''
+    image_id = ''
 
     def __init__(self, images_path, temp_path, image_name):
         self.images_path = images_path
         self.temp_path = temp_path
         self.image_name = image_name
+        self.image_id = image_name.split('.')[-2]

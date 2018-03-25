@@ -2,13 +2,13 @@
 """
 Main flask process
 """
-from flask import Flask, url_for, send_file, send_from_directory, request, Response
+from flask import Flask, url_for, send_file, send_from_directory, request, Response, jsonify
 from flask_cors import CORS
 import base64
 import time
 import logging, os
 import requests
-from utils import add_to_pipeline
+from utils import add_to_pipeline, continue_pipeline
 from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
@@ -37,14 +37,14 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def stream_output(upload_folder, temp_folder, file_name):
-    for output_index, output_object in enumerate(add_to_pipeline(upload_folder, temp_folder, file_name)):
-        if output_index == 0:
-            with open(output_object, "rb") as image_file:
-                encoded_image = base64.b64encode(image_file.read())
-            yield encoded_image
-        else:
-            yield output_object
+# def stream_output(upload_folder, temp_folder, file_name):
+#     for output_index, output_object in enumerate(add_to_pipeline(upload_folder, temp_folder, file_name)):
+#         if output_index == 0 or output_index == 1:
+#             with open(output_object, "rb") as image_file:
+#                 encoded_image = base64.b64encode(image_file.read())
+#             yield encoded_image
+#         else:
+#             yield output_object
 
 @app.route('/', methods=['GET'])
 def index():
@@ -68,14 +68,34 @@ def api_root():
             saved_path = os.path.join(app.config['UPLOAD_FOLDER'], file_name)
             app.logger.info("saving {}".format(saved_path))
             img.save(saved_path)
-            return Response(stream_output(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], file_name))
-            # return ("Image uploaded successfully", 200, {})
+            # return Response(stream_output(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], file_name))
+            bbox_image = add_to_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], file_name)
+            with open(bbox_image, "rb") as image_file:
+                encoded_image = base64.b64encode(image_file.read())
+            return jsonify(
+                image=encoded_image.decode("utf-8"),
+                image_name=file_name
+            )
         else:
-            return ("No image sent", 401, {})
+            return Response("No image sent", status=401)
+    except Exception as e:
+        app.logger.info(e)
+        return Response("Error occured:- "+str(e), status=400)
+
+@app.route('/continue/<string:image_id>', methods = ['GET'])
+def api_continue(image_id):
+    app.logger.info(PROJECT_HOME)
+    try:
+        final_image = continue_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id)
+        with open(final_image, "rb") as image_file:
+            encoded_image = base64.b64encode(image_file.read())
+            return jsonify(
+                image=encoded_image.decode("utf-8"),
+                image_name=image_id
+            )
     except Exception as e:
         app.logger.info(e)
         return ("Error occured:- "+str(e), 400, {})
-
 
 def heavy():  # we can put our entire pipeline here
 	time.sleep(2)
