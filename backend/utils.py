@@ -14,6 +14,8 @@ import parse_name as pn
 import lexigram
 import spellcheck_azure
 import spellcheck_custom
+import CoreNLP as cnlp
+
 
 class coordinate:
     x = 0
@@ -246,6 +248,10 @@ def put_text(in_img, l_boxes):
     # cv2.waitKey(0)
     return out_img
 
+def call_CoreNLP(in_img,bounding_boxes) :
+    # This calls core function to get name of hospital, address, doctors name ,specialisation
+    height, width, _ = in_img.shape
+    return cnlp.core(height,width,bounding_boxes) #Output as a list - refer Readme_nlp
 
 
 if __name__ == '__main__':
