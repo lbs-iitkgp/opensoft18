@@ -14,8 +14,9 @@ class boundingBox:
     tr = coordinate(0, 0)
     br = coordinate(0, 0)
     bl = coordinate(0, 0)
+    bb_children = []
 
-    def __init__(self, tl, tr, bl, br, bound_text, box_type):
+    def __init__(self, tl, tr, bl, br, bound_text, box_type, bb_chilren):
 
         """
         :param tl: coordinates of top left
@@ -24,6 +25,7 @@ class boundingBox:
         :param br: coordinates of bottom right
         :param bound_text: The text inside the box
         :param box_type: categorize the box as line(L)/word(W)
+        :param bb_children: List of all children objects of same type
         """
 
         self.tl = tl
@@ -32,6 +34,7 @@ class boundingBox:
         self.bl = bl
         self.bound_text = bound_text
         self.box_type = box_type
+        self.bb_children = bb_chilren
 
     def __repr__(self):  # object definition
         return "<boundingBox box_type:%s bound_text:%s tl:(%s,%s) tr:(%s,%s) bl:(%s,%s) br:(%s,%s)>" % (self.box_type,

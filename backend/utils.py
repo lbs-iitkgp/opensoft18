@@ -55,21 +55,38 @@ def get_lexigram(bounding_boxes):
 
     return lexigram_json
 
-def fix_spelling(bounding_box):
+def fix_sentence_bound_text(bounding_box_list):
+    """
+    Fixes the `bound_text` attribute for sentence level boundingBox objects
+    using the bb_children attribute.
+    :param bounding_box_list: a list of bounding boxes with bound_text
+    :return: bounding_box_list: a list of bounding boxes with spell-fixed bound_text
+    """
+    for bbox in bounding_box_list:
+        if bbox.box_type == 'L':
+            bound_text = ''
+            for child_box in bbox.bb_children:
+                bound_text = bound_text + child_box.bound_text + ' '
+            bbox.bound_text = bound_text
+    return bounding_box_list
+
+def fix_spelling(bounding_box_list):
     """
     Fixes spelling based on Azure spellchecker, metadata extraction and custom spellchecker
-    :param bounding_box: a bounding box with bound_text
-    :return: bounding_box: a bounding box with spell-fixed bound_text
+    :param bounding_box_list: a list of bounding boxes with bound_text
+    :return: bounding_box_list: a list of bounding boxes with spell-fixed bound_text
     """
-    text = bounding_box.bound_text
     # text = spellcheck_azure.make_correction(text)
-    if lexigram.extract_metadata_json(text):
-        bounding_box.bound_text = text
-        return bounding_box
-
-    text = spellcheck_custom.spellcor(text)
-    bounding_box.bound_text = text
-    return bounding_box
+    # if lexigram.extract_metadata_json(text):
+    #     bounding_box_list.bound_text = text
+    #     return bounding_box_list
+    for bbox in bounding_box_list:
+        if bbox.box_type == 'W':
+            text = spellcheck_custom.spellcor(bbox.bound_text)
+            bbox.bound_text = text
+    
+    bounding_box_list = fix_sentence_bound_text(bounding_box_list)
+    return bounding_box_list
 
 def crop_image(input_image, x1, x2, y1, y2):
     crop_out = input_image[y1:y2, x1:x2]
@@ -173,8 +190,7 @@ def continue_pipeline(images_path, temp_path, image_name):
     print(complete_sentence)
 
     # Fix all spellings
-    # for bbox in ocr_data:
-    #     fix_spelling(bbox)
+    fix_spelling(ocr_data)
 
     replaced_image_object = cv2.imread(
         os.path.join(input_image.images_path, input_image.image_name))

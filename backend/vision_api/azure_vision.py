@@ -39,19 +39,21 @@ def parse_azure_ocr(azure_json):
 
     # initialize
     c = coordinate(0, 0)
-    bb = boundingBox(c, c, c, c, "", "W")
+    bb = boundingBox(c, c, c, c, "", "W", [])
+    bbl = boundingBox(c, c, c, c, "", "W", [])
     llist = []
     for i in range(slen):
         line = sentence[i]["words"]
         line_box = sentence[i]["boundingBox"]
-        bb.bound_text = sentence[i]["text"]
-        bb.box_type = "L"
-        bb.bl = coordinate(line_box[0], line_box[1])
-        bb.br = coordinate(line_box[2], line_box[3])
-        bb.tr = coordinate(line_box[4], line_box[5])
-        bb.tl = coordinate(line_box[6], line_box[7])
-        llist.append(copy.deepcopy(bb))
+        bbl.bound_text = sentence[i]["text"]
+        bbl.box_type = "L"
+        bbl.bl = coordinate(line_box[0], line_box[1])
+        bbl.br = coordinate(line_box[2], line_box[3])
+        bbl.tr = coordinate(line_box[4], line_box[5])
+        bbl.tl = coordinate(line_box[6], line_box[7])
+        # llist.append(copy.deepcopy(bbl))
         llen = len(line)
+        word_objects_list = []
         for j in range(llen):
             word_box = line[j]["boundingBox"]
             word = line[j]["text"]
@@ -61,7 +63,11 @@ def parse_azure_ocr(azure_json):
             bb.tr = coordinate(word_box[4], word_box[5])
             bb.tl = coordinate(word_box[6], word_box[7])
             bb.bound_text = word
+            bb.bb_children = []
+            word_objects_list.append(bb)
             llist.append(copy.deepcopy(bb))
+        bbl.bb_children = word_objects_list
+        llist.append(copy.deepcopy(bbl))
     return llist
 
 def get_azure_ocr(input_image):

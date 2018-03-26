@@ -43,7 +43,7 @@ def parse_google_ocr(ocr_response):
                         coordinate(word_bbox.vertices[1].x, word_bbox.vertices[1].y),
                         coordinate(word_bbox.vertices[3].x, word_bbox.vertices[3].y),
                         coordinate(word_bbox.vertices[2].x, word_bbox.vertices[2].y),
-                        word_string, 'W'
+                        word_string, 'W', []
                     )
                     word_bounds.append(word_bbox_object)
                 sentence_bbox_object = boundingBox(
@@ -51,7 +51,7 @@ def parse_google_ocr(ocr_response):
                     coordinate(sentence_bbox.vertices[1].x, sentence_bbox.vertices[1].y),
                     coordinate(sentence_bbox.vertices[3].x, sentence_bbox.vertices[3].y),
                     coordinate(sentence_bbox.vertices[2].x, sentence_bbox.vertices[2].y),
-                    sentence_string, 'L'
+                    sentence_string, 'L', word_bounds
                 )
                 sentence_bounds.append(sentence_bbox_object)
     return word_bounds + sentence_bounds

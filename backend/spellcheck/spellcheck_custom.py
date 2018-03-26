@@ -118,9 +118,10 @@ def spellcor(word):
 
     if word in WORDS:
         return word
-    
-    return correction(word)
+    try:
+        return correction(word)
+    except Exception:
+        return word
 
 if __name__ == "__main__":
     print(spellcor(argv[1]))
-
