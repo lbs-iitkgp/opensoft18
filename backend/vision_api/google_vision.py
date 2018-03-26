@@ -2,6 +2,7 @@ import io
 import os
 import pickle
 from enum import Enum
+import cv2
 
 # Imports the Google Cloud client library
 from google.cloud import vision
@@ -58,7 +59,15 @@ def parse_google_ocr(ocr_response):
 
 def get_google_ocr(input_image):
     # The name of the image file to annotate
-    file_name = os.path.join(input_image.images_path, input_image.image_name)
+    try:
+        file_name = os.path.join(input_image.temp_path, "white_" + input_image.image_name)
+    except Exception:
+        file_name = os.path.join(input_image.images_path, input_image.image_name)
+
+    # cv2_file = cv2.imread(file_name)
+    # cv2.imshow('OCR input image', cv2_file)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
     # Loads the image into memory
     with io.open(file_name, 'rb') as image_file:

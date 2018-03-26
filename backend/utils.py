@@ -9,7 +9,7 @@ import img2pdf
 import cv2
 import pickle
 
-import pre_process as pp
+import utilities.pre_process as pp
 
 from spellcheck import parse_name as pn
 from utilities.digicon_classes import coordinate, boundingBox, image_location
@@ -20,7 +20,6 @@ def preprocess(input_image):
     """
     pre-processes the image and converts to gray-scale
     :param input_image: path to the image to be processed
-    :return: out_image: processed image in cv2 format
     """
     pp.whiteboard(input_image)
     # pp.notescan_main(input_image)
@@ -95,10 +94,11 @@ def crop_image(input_image, x1, x2, y1, y2):
 def remove_text(input_image, bb_object):
     if bb_object.box_type == 'W':
         img = input_image
-        x1 = bb_object.tl.x
-        x2 = bb_object.br.x
-        y1 = bb_object.tl.y
-        y2 = bb_object.br.y
+        x1 = min(bb_object.tl.x, bb_object.tr.x, bb_object.bl.x, bb_object.br.x)
+        x2 = max(bb_object.tl.x, bb_object.tr.x, bb_object.bl.x, bb_object.br.x)
+        y1 = min(bb_object.tl.y, bb_object.tr.y, bb_object.bl.y, bb_object.br.y)
+        y2 = max(bb_object.tl.y, bb_object.tr.y, bb_object.bl.y, bb_object.br.y)
+        print(x1,x2,y1,y2)
         crop = crop_image(img, x1, x2, y1, y2)
         kernel = np.ones((5,5), np.uint8)
         # crop = cv2.erode(crop, kernel, iterations=5)
@@ -166,12 +166,12 @@ def add_to_pipeline(images_path, temp_path, image_name):
     print(image_name)
     input_image = image_location(images_path, temp_path, image_name)
     # Pre-processing
-    # preprocessed_image = preprocess(input_image)
-    preprocessed_image = input_image
-
+    # preprocessed_image = input_image
+    preprocess(input_image)
+    
     # Get OCR data
-    ocr_data = google_vision.get_google_ocr(preprocessed_image)
-    # ocr_data = azure_vision.get_azure_ocr(preprocessed_image)
+    ocr_data = google_vision.get_google_ocr(input_image)
+    # ocr_data = azure_vision.get_azure_ocr(input_image)
     with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'wb') as pkl_output:
         pickle.dump(ocr_data, pkl_output, pickle.HIGHEST_PROTOCOL)
 

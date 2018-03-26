@@ -86,17 +86,18 @@ def api_root():
 @app.route('/continue/<string:image_id>', methods = ['GET'])
 def api_continue(image_id):
     app.logger.info(PROJECT_HOME)
-    try:
-        final_image = continue_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id)
-        with open(final_image, "rb") as image_file:
-            encoded_image = base64.b64encode(image_file.read())
-            return jsonify(
-                image=encoded_image.decode("utf-8"),
-                image_name=image_id
-            )
-    except Exception as e:
-        app.logger.info(e)
-        return ("Error occured:- "+str(e), 400, {})
+    # try:
+    final_image = continue_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id)
+    with open(final_image, "rb") as image_file:
+        encoded_image = base64.b64encode(image_file.read())
+        return jsonify(
+            image=encoded_image.decode("utf-8"),
+            image_name=image_id
+        )
+    # except Exception as e:
+    #     print(e)
+    #     app.logger.info(e)
+    #     return ("Error occured:- "+str(e), 400, {})
 
 @app.route('/finish/<string:image_id>', methods = ['GET'])
 def api_finish(image_id):

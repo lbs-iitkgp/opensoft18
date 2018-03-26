@@ -17,6 +17,7 @@ import os
 from argparse import ArgumentParser
 import numpy as np
 from utilities.digicon_classes import image_location
+from subprocess import call
 
 # in some installation of PIL, Image can be imported directly
 try:
@@ -29,12 +30,10 @@ from scipy.cluster.vq import kmeans, vq
 # ignores division warnings caused in numpy
 np.seterr(divide='ignore', invalid='ignore')
 
-
-
 def whiteboard(input_image):
     input_filename = os.path.join(input_image.images_path, input_image.image_name)
-    os.system("./white.sh "+input_filename+" "+ input_filename + "_temp.jpg")
-
+    # os.system("./white.sh " + input_filename + " " + os.path.join(input_image.temp_path, "white_" + input_image.image_name))
+    call([os.path.join(os.path.dirname(os.path.realpath(__file__)), "white.sh"), input_filename, os.path.join(input_image.temp_path, "white_" + input_image.image_name)])
 
 def quantize(image, bits_per_channel=None):
 
