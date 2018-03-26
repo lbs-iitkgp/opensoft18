@@ -12,6 +12,7 @@
     padding: 15px;
     border-radius: 30px;
     border: 2px solid #3c3e63;
+    outline: none;
 }
 
 .download-button:hover {

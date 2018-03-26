@@ -61,6 +61,13 @@
   font-family: 'Pacifico', cursive;
 }
 
+.previews {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+
 .previews img {
   max-height: 100%;
   max-width: 100%;
