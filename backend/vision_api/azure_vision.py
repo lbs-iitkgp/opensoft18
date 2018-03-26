@@ -71,9 +71,9 @@ def parse_azure_ocr(azure_json):
     return llist
 
 def get_azure_ocr(input_image):
-    try:
+    if os.path.exists(os.path.join(input_image.temp_path, "white_" + input_image.image_name)):
         file_name = os.path.join(input_image.temp_path, "white_" + input_image.image_name)
-    except Exception:
+    else:
         file_name = os.path.join(input_image.images_path, input_image.image_name)
 
     response = fetch_response(file_name)

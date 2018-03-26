@@ -59,9 +59,9 @@ def parse_google_ocr(ocr_response):
 
 def get_google_ocr(input_image):
     # The name of the image file to annotate
-    try:
+    if os.path.exists(os.path.join(input_image.temp_path, "white_" + input_image.image_name)):
         file_name = os.path.join(input_image.temp_path, "white_" + input_image.image_name)
-    except Exception:
+    else:
         file_name = os.path.join(input_image.images_path, input_image.image_name)
 
     # cv2_file = cv2.imread(file_name)
