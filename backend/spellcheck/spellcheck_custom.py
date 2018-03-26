@@ -37,9 +37,10 @@ dicts['8'] = 'b'
 dicts['9'] = 'g'
 dicts['('] = 'c'
 dicts['5'] = 's'
-dicts['1'] = 'l'
+dicts['1'] = 'li'
 dicts['0'] = '0'
 misc = '12356890('
+numbers = '1234567890'
 
 def words(text): return re.findall(r'\w+', text.lower())
 
@@ -109,13 +110,7 @@ def edits3(word):
 def spellcor(word):
     word = word.lower()
     # while word.count(' ') > 2:
-    #     word = word.replace(' ', '', 1)
-    words = list(word)
-    for count,s in enumerate(words):
-        if s in list(misc):
-            words[count] = dicts[s]
-    word = ''.join(words)
-
+    # word = word.replace(' ', '', 1)
     if word in WORDS:
         return word
     try:
