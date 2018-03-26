@@ -61,7 +61,6 @@ def get_lexigram(bounding_box):
         for finding_type in individual_json:
             for finding in individual_json[finding_type]:
                 if finding['token'] == w_box.bound_text:
-                    print(w_box.bound_text)
                     w_box.lexi_type = finding_type
                     w_box.lexi_label = finding['label']
     # for w_box in bounding_box.bb_children:

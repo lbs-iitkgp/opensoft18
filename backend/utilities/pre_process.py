@@ -13,7 +13,7 @@ from __future__ import print_function
 import sys
 import os
 import numpy as np
-from digicon_classes import image_location
+from utilities.digicon_classes import image_location
 from subprocess import call
 
 # in some installation of PIL, Image can be imported directly
