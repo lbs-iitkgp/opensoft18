@@ -22,7 +22,8 @@ def preprocess(input_image):
     :param input_image: path to the image to be processed
     :return: out_image: processed image in cv2 format
     """
-    pp.notescan_main(input_image)
+    pp.whiteboard(input_image)
+    # pp.notescan_main(input_image)
 
 def get_names(in_str):
     """

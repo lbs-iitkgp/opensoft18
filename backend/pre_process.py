@@ -27,7 +27,13 @@ except ImportError:
 from scipy.cluster.vq import kmeans, vq
 
 # ignores division warnings caused in numpy
-np.seterr(divide='ignore', invalid='ignore') 
+np.seterr(divide='ignore', invalid='ignore')
+
+
+
+def whiteboard(input_image):
+    input_filename = os.path.join(input_image.images_path, input_image.image_name)
+    os.system("./white.sh "+input_filename+" "+ input_filename + "_temp.jpg")
 
 
 def quantize(image, bits_per_channel=None):
