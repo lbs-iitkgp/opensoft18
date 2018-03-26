@@ -8,8 +8,9 @@ import base64
 import time
 import logging, os
 import requests
-from utils import add_to_pipeline, continue_pipeline
 from flask_socketio import SocketIO, emit
+
+from utils import add_to_pipeline, continue_pipeline
 
 app = Flask(__name__)
 CORS(app)
@@ -18,7 +19,7 @@ socketio = SocketIO(app)
 REQUESTS_SESSION = requests.Session()
 file_handler = logging.FileHandler('server.log')
 app.logger.addHandler(file_handler)
-app.logger.setLevel(logging.INFO)
+app.logger.setLevel(logging.DEBUG)
 
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))

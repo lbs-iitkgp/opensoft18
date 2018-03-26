@@ -37,7 +37,7 @@ def make_correction(old_query):
         suggestions = sorted(token['suggestions'], key=operator.itemgetter('score'), reverse=True)
         replacement = suggestions[0]['suggestion']
         new_query = new_query[:left] + replacement + new_query[right:]
-
+    print(new_query)
     return new_query
 
 if __name__ == "__main__":

@@ -10,13 +10,10 @@ import cv2
 import pickle
 
 import pre_process as pp
-import parse_name as pn
-import lexigram
-import spellcheck_azure
-import spellcheck_custom
-
+from spellcheck import parse_name as pn
 from utilities.digicon_classes import coordinate, boundingBox, image_location
 from vision_api import google_vision, azure_vision
+from spellcheck import lexigram, spellcheck_azure, spellcheck_custom
 
 def preprocess(input_image):
     """
@@ -65,7 +62,7 @@ def fix_spelling(bounding_box):
     :return: bounding_box: a bounding box with spell-fixed bound_text
     """
     text = bounding_box.bound_text
-    text = spellcheck_azure.make_correction(text)
+    # text = spellcheck_azure.make_correction(text)
     if lexigram.extract_metadata_json(text):
         bounding_box.bound_text = text
         return bounding_box
@@ -170,10 +167,14 @@ def continue_pipeline(images_path, temp_path, image_name):
     input_image = image_location(images_path, temp_path, image_name)
     with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'rb') as pkl_input:
         ocr_data = pickle.load(pkl_input)
+    complete_sentence = ''
+    for bbox in ocr_data:
+        complete_sentence = complete_sentence + bbox.bound_text + ' '
+    print(complete_sentence)
+
     # Fix all spellings
     # for bbox in ocr_data:
-    #     if bbox.box_type == 'W':
-    #         fix_spelling(bbox)
+    #     fix_spelling(bbox)
 
     replaced_image_object = cv2.imread(
         os.path.join(input_image.images_path, input_image.image_name))
