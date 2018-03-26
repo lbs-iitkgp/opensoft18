@@ -1,0 +1,25 @@
+Installing process for CoreNLP:
+
+1. Install Java 1.8+ (Check with command: java -version)
+
+2. Install Stanford CoreNLP : (Paste URL : http://nlp.stanford.edu/software/stanford-corenlp-full-2018-02-27.zip ).
+
+3. Unzip the file and get terminal to the directory
+
+4. Pip install stanfordcorenlp
+
+5. For the PS, on line 21 of the corenlp.py file edit the address with the complete address of installation folder.
+ 	add statement nlp.close() to the same file at end because it consumes a lot of memory space
+
+
+
+About CoreNLP.py
+
+Arguments input:image no of rows and columns and bounding boxes
+
+Output as variable-  output_list :
+output_list[0]=		hosp		#hospital_name
+output_list[1]=		doc 		#doctor_name
+output_list[2]=		addr 		#hospital_address
+output_list[3]=		qual 		#doctor_qualification/specialization
+output_list[3]=		phone_no 		#contact details

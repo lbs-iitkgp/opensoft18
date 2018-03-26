@@ -10,6 +10,7 @@ import cv2
 import pickle
 
 import pre_process as pp
+
 from spellcheck import parse_name as pn
 from utilities.digicon_classes import coordinate, boundingBox, image_location
 from vision_api import google_vision, azure_vision
@@ -153,6 +154,12 @@ def put_text(in_img, bbox):
     # cv2.imshow("test", out_img)
     # cv2.waitKey(0)
     return out_img
+
+
+def call_CoreNLP(in_img,bounding_boxes) :
+    # This calls core function to get name of hospital, address, doctors name ,specialisation
+    height, width, _ = in_img.shape
+    return cnlp.core(height,width,bounding_boxes) #Output as a list - refer Readme_nlp
 
 def add_to_pipeline(images_path, temp_path, image_name):
     print(image_name)
