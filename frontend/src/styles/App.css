@@ -61,12 +61,14 @@
   font-family: 'Pacifico', cursive;
 }
 
-.original-preview {
-  height: 80vh;
-  width: auto;
+.previews {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
 }
 
-.original-preview img {
+.previews img {
   max-height: 100%;
   max-width: 100%;
 }

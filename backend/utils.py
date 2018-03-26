@@ -2,64 +2,19 @@
 
 import time
 import json
-import copy
 import operator
-
+import os
 import numpy as np
 import img2pdf
 import cv2
+import pickle
 
 import pre_process as pp
-import parse_name as pn
-import lexigram
-import spellcheck_azure
-import spellcheck_custom
-import CoreNLP as cnlp
 
-
-class coordinate:
-    x = 0
-    y = 0
-
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-
-class boundingBox:
-    bound_text = ''
-    box_type = ''
-    tl = coordinate(0, 0)
-    tr = coordinate(0, 0)
-    br = coordinate(0, 0)
-    bl = coordinate(0, 0)
-
-    def __init__(self, tl, tr, bl, br, bound_text, box_type):
-
-        """
-        :param tl: coordinates of top left
-        :param tr: coordinates of top right
-        :param bl: coordinates of bottom left
-        :param br: coordinates of bottom right
-        :param bound_text: The text inside the box
-        :param box_type: categorize the box as line(L)/word(W)
-        """
-
-        self.tl = tl
-        self.tr = tr
-        self.br = br
-        self.bl = bl
-        self.bound_text = bound_text
-        self.box_type = box_type
-
-    def __repr__(self):  # object definition
-        return "<boundingBox box_type:%s bound_text:%s tl:(%s,%s) tr:(%s,%s) bl:(%s,%s) br:(%s,%s)>" % (self.box_type,
-            self.bound_text, self.tl.x, self.tl.y, self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y)
-
-    def __str__(self):  # print statement
-        return "box_type:%s \nbound_text:%s \ntl:(%s,%s) \ntr:(%s,%s) \nbl:(%s,%s) \nbr:(%s,%s)" % (self.box_type,
-            self.bound_text, self.tl.x, self.tl.y, self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y)
-
+from spellcheck import parse_name as pn
+from utilities.digicon_classes import coordinate, boundingBox, image_location
+from vision_api import google_vision, azure_vision
+from spellcheck import lexigram, spellcheck_azure, spellcheck_custom
 
 def preprocess(input_image):
     """
@@ -68,9 +23,6 @@ def preprocess(input_image):
     :return: out_image: processed image in cv2 format
     """
     pp.notescan_main(input_image)
-    out_image = cv2.imread("output.png")
-    return out_image
-
 
 def get_names(in_str):
     """
@@ -80,63 +32,14 @@ def get_names(in_str):
     """
     return pn.extract(in_str)
 
-def get_azure_ocr(input_image):
-    azure_json = {}
-    return azure_json
-
-
-def parse_azure_json(azure_json):
-    """
-    extract data from json created by Azure
-    :param azure_json: path to the json file
-    :return llist: list of boundings boxes of words
-    """
-
-    data = json.load(open(azure_json))
-    sentence = data["recognitionResult"]["lines"]
-    slen = len(sentence)
-
-    # initialize
-    c = coordinate(0, 0)
-    bb = boundingBox(c, c, c, c, "", "W")
-    llist = []
-    for i in range(slen):
-        line = sentence[i]["words"]
-        line_box = sentence[i]["boundingBox"]
-        bb.bound_text = sentence[i]["text"]
-        bb.box_type = "L"
-        bb.bl = coordinate(line_box[0], line_box[1])
-        bb.br = coordinate(line_box[2], line_box[3])
-        bb.tr = coordinate(line_box[4], line_box[5])
-        bb.tl = coordinate(line_box[6], line_box[7])
-        llist.append(copy.deepcopy(bb))
-        llen = len(line)
-        for j in range(llen):
-            word_box = line[j]["boundingBox"]
-            word = line[j]["text"]
-            bb.box_type = "W"
-            bb.bl = coordinate(word_box[0], word_box[1])
-            bb.br = coordinate(word_box[2], word_box[3])
-            bb.tr = coordinate(word_box[4], word_box[5])
-            bb.tl = coordinate(word_box[6], word_box[7])
-            bb.bound_text = word
-            llist.append(copy.deepcopy(bb))
-    return llist
-
-
-def img_to_pdf(image):  # name of the image as input
-    pdf_bytes = img2pdf.convert([image])
-    date_string = time.strftime("%Y-%m-%d-%H:%M:%S.pdf")
-    file = open(date_string, "wb")
+def img_to_pdf(input_image):  # name of the image as input
+    replaced_image = os.path.join(input_image.temp_path, "replaced_" + input_image.image_name)
+    pdf_bytes = img2pdf.convert([replaced_image])
+    pdf_image = os.path.join(input_image.temp_path, "pdf_" + input_image.image_id + ".pdf")
+    file = open(pdf_image, "wb")
     file.write(pdf_bytes)
     file.close()
-    return date_string
-
-
-def get_parallel_boxes(bounding_boxes):
-    list_of_boxes = []
-    return list_of_boxes
-
+    return pdf_image
 
 def get_lexigram(bounding_boxes):
     """
@@ -144,7 +47,6 @@ def get_lexigram(bounding_boxes):
     :param bounding_box: a bounding box with bound_text
     :return: bounding_box: a bounding box with spell-fixed bound_text
     """
-
     lexigram_json = {}
     for bounding_box in bounding_boxes:
         individual_json = lexigram.extract_metadata_json(bounding_box.bound_text)
@@ -152,74 +54,80 @@ def get_lexigram(bounding_boxes):
             if key not in lexigram_json:
                 lexigram_json[key] = set()
             lexigram_json[key] = lexigram_json[key].union(individual_json[key])
-
     return lexigram_json
 
-def fix_spelling(bounding_box):
+def fix_sentence_bound_text(bounding_box_list):
     """
-    Fixes spelling based on Azure spellchecker, metadata extraction and custom spellchecker
-    :param bounding_box: a bounding box with bound_text
-    :return: bounding_box: a bounding box with spell-fixed bound_text
+    Fixes the `bound_text` attribute for sentence level boundingBox objects
+    using the bb_children attribute.
+    :param bounding_box_list: a list of bounding boxes with bound_text
+    :return: bounding_box_list: a list of bounding boxes with spell-fixed bound_text
     """
+    for bbox in bounding_box_list:
+        if bbox.box_type == 'L':
+            bound_text = ''
+            for child_box in bbox.bb_children:
+                bound_text = bound_text + child_box.bound_text + ' '
+            bbox.bound_text = bound_text
+    return bounding_box_list
 
-    text = bounding_box.bound_text
-    text = spellcheck_azure.make_correction(text)
-    if lexigram.extract_metadata_json(text):
-        bounding_box.bound_text = text
-        return bounding_box
+def fix_spelling(bounding_box_list):
+    """
+    Fixes spelling based on Azure spellchecker and custom spellchecker
+    :param bounding_box_list: a list of bounding boxes with bound_text
+    :return: bounding_box_list: a list of bounding boxes with spell-fixed bound_text
+    """
+    # text = spellcheck_azure.make_correction(text)
 
-    text = spellcheck_custom.spellcor(text)
-    bounding_box.bound_text = text
-    return bounding_box
+    for bbox in bounding_box_list:
+        if bbox.box_type == 'W':
+            text = spellcheck_custom.spellcor(bbox.bound_text)
+            bbox.bound_text = text
 
-def crop_image(input_image,x1,x2,y1,y2):
+    bounding_box_list = fix_sentence_bound_text(bounding_box_list)
+    return bounding_box_list
+
+def crop_image(input_image, x1, x2, y1, y2):
     crop_out = input_image[y1:y2, x1:x2]
     return crop_out
 
 def remove_text(input_image, bb_object):
-
-    if bb_object.box_type == 'L':
-        return input_image
-
-    else bb_object.box_type == 'W':
-        img = cv2.imread(input_image, 0)
+    if bb_object.box_type == 'W':
+        img = input_image
         x1 = bb_object.tl.x
         x2 = bb_object.br.x
         y1 = bb_object.tl.y
         y2 = bb_object.br.y
-        crop = crop_image('img',x1,x2,y1,y2)
+        crop = crop_image(img, x1, x2, y1, y2)
         kernel = np.ones((5,5), np.uint8)
-        img_erosion = cv2.erode(crop, kernel, iterations=5)
-        img_dilation = cv2.dilate(img_erosion, kernel, iterations=60)
-        out_image = img_dilation
-        return out_image
+        # crop = cv2.erode(crop, kernel, iterations=5)
+        crop = cv2.dilate(crop, kernel, iterations=60)
+        # crop = cv2.inpaint(crop, crop, 3, cv2.INPAINT_TELEA)
+        input_image[y1:y2, x1:x2] = crop
 
-def draw_box(in_img, l_boxes):
+def draw_box(in_img, l_boxes, l_type='W'):
     """
-    draw red bounding boxes for line ('L') box_types
+    draw red bounding boxes for line ('W') box_types
     :param in_img: input image in opencv format
     :param l_boxes: list of bounding boxes to be drawn
     :return: in_img: image (in opencv format) after drawing boxes in red
     """
     red = (0, 0, 255)  # opencv follows bgr pattern
     for box in l_boxes:
-        if box.box_type == 'L':
+        if box.box_type == l_type:
             vertices = np.array([[box.tl.x, box.tl.y], [box.tr.x, box.tr.y], [box.br.x, box.br.y],
                                  [box.bl.x, box.bl.y]], np.int32)
             cv2.polylines(in_img, [vertices], True, red, thickness=1, lineType=cv2.LINE_AA)
-
     # uncomment below lines while debugging
     # cv2.imshow("debug", in_img)
     # cv2.waitKey(0)
-
     return in_img
-    
 
-def put_text(in_img, l_boxes):
+def put_text(in_img, bbox):
     """
     put extracted text (in black) over the place of original text
     :param in_img: cleaned image in opencv format
-    :param l_boxes: list of bounding boxes
+    :param bbox: bounding box
     :return: out_img: a separate image with text placed at right places
     """
     out_img = in_img
@@ -228,31 +136,104 @@ def put_text(in_img, l_boxes):
     # multiplying factor used to calculate font_scale in relation to height
     factor = .03
 
-    for box in l_boxes:
-        if box.box_type == 'W':
+    height = bbox.bl.y - bbox.tl.y
+    width = bbox.tr.x - bbox.tl.x
 
-            height = box.bl.y - box.tl.y
-            width = box.tr.x - box.tl.x
+    font_scale = factor * height
+    text_size = cv2.getTextSize(bbox.bound_text, font, font_scale, thickness=1)
+    # to put text in middle of the bounding box
+    text_x_center = int(bbox.bl.x + ((width / 2) - (text_size[0][0] / 2)))
+    text_y_center = int(bbox.bl.y - ((height / 2) - (text_size[0][1] / 2)))
 
-            font_scale = factor * height
-            text_size = cv2.getTextSize(box.bound_text, font, font_scale, thickness=1)
-            # to put text in middle of the bounding box
-            text_x_center = int(box.bl.x + ((width / 2) - (text_size[0][0] / 2)))
-            text_y_center = int(box.bl.y - ((height / 2) - (text_size[0][1] / 2)))
-
-            cv2.putText(out_img, box.bound_text, (text_x_center, text_y_center), font, font_scale, font_color,
-                        thickness=1, lineType=cv2.LINE_AA)
+    cv2.putText(
+        out_img, bbox.bound_text, (text_x_center, text_y_center),
+        font, font_scale, font_color, thickness=1, lineType=cv2.LINE_AA
+    )
 
     # while debugging and calibrating, uncomment below lines
     # cv2.imshow("test", out_img)
     # cv2.waitKey(0)
     return out_img
 
+
 def call_CoreNLP(in_img,bounding_boxes) :
     # This calls core function to get name of hospital, address, doctors name ,specialisation
     height, width, _ = in_img.shape
     return cnlp.core(height,width,bounding_boxes) #Output as a list - refer Readme_nlp
 
+def add_to_pipeline(images_path, temp_path, image_name):
+    print(image_name)
+    input_image = image_location(images_path, temp_path, image_name)
+    # Pre-processing
+    # preprocessed_image = preprocess(input_image)
+    preprocessed_image = input_image
+
+    # Get OCR data
+    ocr_data = google_vision.get_google_ocr(preprocessed_image)
+    # ocr_data = azure_vision.get_azure_ocr(preprocessed_image)
+    with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'wb') as pkl_output:
+        pickle.dump(ocr_data, pkl_output, pickle.HIGHEST_PROTOCOL)
+
+    # Draw bounding boxes around words
+    bbl_image_object = cv2.imread(
+        os.path.join(preprocessed_image.images_path, preprocessed_image.image_name))
+    draw_box(bbl_image_object, ocr_data)
+    # cv2.imshow('bbl_image_object', bbl_image_object)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    bbl_image = os.path.join(input_image.temp_path, "bbl_" + input_image.image_name)
+    cv2.imwrite(bbl_image, bbl_image_object)
+    return bbl_image
+
+def continue_pipeline(images_path, temp_path, image_name):
+    input_image = image_location(images_path, temp_path, image_name)
+    with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'rb') as pkl_input:
+        ocr_data = pickle.load(pkl_input)
+    complete_sentence = ''
+    for bbox in ocr_data:
+        complete_sentence = complete_sentence + bbox.bound_text + ' '
+    print(complete_sentence)
+
+    # Fix all spellings
+    fix_spelling(ocr_data)
+
+    replaced_image_object = cv2.imread(
+        os.path.join(input_image.images_path, input_image.image_name))
+    # Remove original text from image
+    for bbox in ocr_data:
+        remove_text(replaced_image_object, bbox)
+    # Put font text back on image
+    for bbox in ocr_data:
+        if bbox.box_type == 'W':
+            put_text(replaced_image_object, bbox)
+    # cv2.imshow('replaced_image_object', replaced_image_object)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+    with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'wb') as pkl_output:
+        pickle.dump(ocr_data, pkl_output, pickle.HIGHEST_PROTOCOL)
+
+    replaced_image = os.path.join(input_image.temp_path, "replaced_" + input_image.image_name)
+    cv2.imwrite(replaced_image, replaced_image_object)
+    return replaced_image
+
+def finish_pipeline(images_path, temp_path, image_name):
+    input_image = image_location(images_path, temp_path, image_name)
+    with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'rb') as pkl_input:
+        ocr_data = pickle.load(pkl_input)
+    final_json = {}
+    
+    # Create PDF
+    pdf_path = img_to_pdf(input_image)
+
+    return final_json
+
+def do_download(images_path, temp_path, image_name, download_type):
+    input_image = image_location(images_path, temp_path, image_name)
+    if download_type == 0:
+        return os.path.join(input_image.temp_path, "replaced_" + input_image.image_name)
+    elif download_type == 1:
+        return os.path.join(input_image.temp_path, "pdf_" + input_image.image_id + ".pdf")
 
 if __name__ == '__main__':
     print("hello!")

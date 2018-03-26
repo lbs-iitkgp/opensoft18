@@ -7,7 +7,8 @@
 # Runtime images
 in.jpg
 vision-api/output.png
-backend/image
+backend/input_images
+backend/temp_images
 frontend/image
 
 # Yarn errors

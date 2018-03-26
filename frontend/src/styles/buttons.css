@@ -1,0 +1,20 @@
+.download-buttons {
+    margin: 20px 0;
+}
+
+.download-button {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    color: white;
+    cursor: pointer;
+    padding: 15px;
+    border-radius: 30px;
+    border: 2px solid #3c3e63;
+    outline: none;
+}
+
+.download-button:hover {
+    color: #eb575d;
+}

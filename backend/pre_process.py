@@ -12,12 +12,11 @@ https://github.com/mzucker/noteshrink/
 # pylint: disable=E1101
 
 from __future__ import print_function
-
 import sys
-
+import os
 from argparse import ArgumentParser
-
 import numpy as np
+from utilities.digicon_classes import image_location
 
 # in some installation of PIL, Image can be imported directly
 try:
@@ -373,19 +372,18 @@ def save(output_filename, labels, palette, dpi, options):
     output_img.save(output_filename, dpi=dpi)
 
 
-def notescan_main(input_filename):
+def notescan_main(input_image):
 
     """
     main function that processes the input file
     :param input_filename: path to the image file to be loaded
     :return: None
     """
+    input_filename = os.path.join(input_image.images_path, input_image.image_name)
 
     options = get_argument_parser().parse_args()
-
     img, dpi = load(input_filename)
-
-    output_filename = 'output.png'
+    output_filename = os.path.join(input_image.temp_path, input_image.image_name)
 
     samples = sample_pixels(img, options)
     palette = get_palette(samples, options)

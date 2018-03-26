@@ -5,7 +5,7 @@ from os.path import join, dirname
 import operator
 import requests
 import dotenv
-dotenv.load(join(dirname(__file__), '.env'))
+dotenv.load_dotenv(join(dirname(__file__), '.env'))
 
 SPELLCHECK_ENDPOINT = 'https://api.cognitive.microsoft.com/bing/v7.0/spellcheck'
 SPELLCHECK_KEY = os.getenv('SPELLCHECK_KEY')
@@ -37,7 +37,7 @@ def make_correction(old_query):
         suggestions = sorted(token['suggestions'], key=operator.itemgetter('score'), reverse=True)
         replacement = suggestions[0]['suggestion']
         new_query = new_query[:left] + replacement + new_query[right:]
-
+    print(new_query)
     return new_query
 
 if __name__ == "__main__":

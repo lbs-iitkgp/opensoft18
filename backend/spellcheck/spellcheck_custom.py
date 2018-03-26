@@ -44,7 +44,8 @@ misc = '12356890('
 def words(text): return re.findall(r'\w+', text.lower())
 
 current = os.path.dirname(__file__)
-DATA = open(os.path.join(current,'medvocab.txt')).read()+'\n'+open(os.path.join(current,'engvocab.txt')).read()
+spellcheckfol = os.path.join(current,'resources')
+DATA = open(os.path.join(spellcheckfol,'medvocab.txt')).read()+'\n'+open(os.path.join(spellcheckfol,'engvocab.txt')).read()
 WORDS = Counter(words(DATA))
 
 def P(word, N=sum(WORDS.values())): 
@@ -117,9 +118,10 @@ def spellcor(word):
 
     if word in WORDS:
         return word
-    
-    return correction(word)
+    try:
+        return correction(word)
+    except Exception:
+        return word
 
 if __name__ == "__main__":
     print(spellcor(argv[1]))
-
