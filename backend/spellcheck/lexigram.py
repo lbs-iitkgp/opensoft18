@@ -22,7 +22,8 @@ def fetch_response(endpoint, query):
     params = {'text': query, 'withContext': True,
               'withMatchLogic': 'longest', 'withText': False}
 
-    return requests.get(endpoint, headers=headers, params=params).json()
+    lexigram_response = requests.get(endpoint, headers=headers, params=params).json()
+    return lexigram_response
 
 def extract_metadata_json(query):
     """
@@ -32,19 +33,22 @@ def extract_metadata_json(query):
     """
 
     metadata = {}
+    metadata_alt = {}
     matches = fetch_response('https://api.lexigram.io/v1/extract/entities', query)['matches']
     for match in matches:
         for match_type in match['types']:
-            if match_type not in metadata:
-                metadata[match_type] = set()
-            metadata[match_type].add(match['label'])
-
-    print(metadata)
-    names = set(pn.extract(query))
-    if names:
-        metadata['NAMES'] = names
-
-    return metadata
+            # if match_type not in metadata:
+            #     metadata[match_type] = set()
+            # metadata[match_type].add(match['label'])
+            for matched_token in match['explanation']['matchedTokens']:
+                metadata_alt.setdefault(match_type, []).append({
+                    'label': match['label'],
+                    'token': matched_token['token']
+                })
+    # names = set(pn.extract(query))
+    # if names:
+    #     metadata['NAMES'] = names
+    return metadata_alt
 
 def has_medicine(query):
     """

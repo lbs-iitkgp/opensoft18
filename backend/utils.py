@@ -41,22 +41,34 @@ def img_to_pdf(input_image):  # name of the image as input
     file.close()
     return pdf_image
 
-def get_lexigram(bounding_boxes):
+def get_lexigram(bounding_box):
     """
     Extracts all possible metadata from all the bounding boxes
     :param bounding_box: a bounding box with bound_text
     :return: bounding_box: a bounding box with spell-fixed bound_text
     """
+    # The possible types detected by lexigraph are:
+    # findings, problems, drugs, devices, anatomy
     lexigram_json = {}
-    for bounding_box in bounding_boxes:
-        individual_json = lexigram.extract_metadata_json(bounding_box.bound_text)
-        for key in individual_json:
-            if key not in lexigram_json:
-                lexigram_json[key] = set()
-            lexigram_json[key] = lexigram_json[key].union(individual_json[key])
-    return lexigram_json
+    print(bounding_box.bound_text)
+    individual_json = lexigram.extract_metadata_json(bounding_box.bound_text)
+    # for key in individual_json:
+    #     if key not in lexigram_json:
+    #         lexigram_json[key] = set()
+    #     lexigram_json[key] = lexigram_json[key].union(individual_json[key])
+    print(individual_json)
+    for w_box in bounding_box.bb_children:
+        for finding_type in individual_json:
+            for finding in individual_json[finding_type]:
+                if finding['token'] == w_box.bound_text:
+                    print(w_box.bound_text)
+                    w_box.lexi_type = finding_type
+                    w_box.lexi_label = finding['label']
+    # for w_box in bounding_box.bb_children:
+    #     print(w_box.bound_text)
+    return individual_json
 
-def fix_sentence_bound_text(bounding_box_list):
+def fix_bound_text(bounding_box_list):
     """
     Fixes the `bound_text` attribute for sentence level boundingBox objects
     using the bb_children attribute.
@@ -64,7 +76,7 @@ def fix_sentence_bound_text(bounding_box_list):
     :return: bounding_box_list: a list of bounding boxes with spell-fixed bound_text
     """
     for bbox in bounding_box_list:
-        if bbox.box_type == 'L':
+        if bbox.box_type == 'L' or bbox.box_type == 'A':
             bound_text = ''
             for child_box in bbox.bb_children:
                 bound_text = bound_text + child_box.bound_text + ' '
@@ -84,7 +96,7 @@ def fix_spelling(bounding_box_list):
             text = spellcheck_custom.spellcor(bbox.bound_text)
             bbox.bound_text = text
 
-    bounding_box_list = fix_sentence_bound_text(bounding_box_list)
+    bounding_box_list = fix_bound_text(bounding_box_list)
     return bounding_box_list
 
 def crop_image(input_image, x1, x2, y1, y2):
@@ -124,6 +136,22 @@ def draw_box(in_img, l_boxes, l_type='W'):
     # cv2.waitKey(0)
     return in_img
 
+def get_lexi_color(lexi_type):
+    # The possible types detected by lexigraph are:
+    # findings, problems, drugs, devices, anatomy
+    font_color = (0, 0, 0)
+    if lexi_type == 'FINDINGS':
+        font_color = (0, 153, 0)
+    elif lexi_type == 'PROBLEMS':
+        font_color = (102, 0, 51)
+    elif lexi_type == 'DRUGS':
+        font_color = (204, 102, 0)
+    elif lexi_type == 'DEVICES':
+        font_color = (255, 204, 0)
+    elif lexi_type == 'ANATOMY':
+        font_color = (102, 0, 0)
+    return font_color
+
 def put_text(in_img, bbox):
     """
     put extracted text (in black) over the place of original text
@@ -133,7 +161,7 @@ def put_text(in_img, bbox):
     """
     out_img = in_img
     font = cv2.FONT_HERSHEY_DUPLEX
-    font_color = (0, 0, 0)
+    font_color = get_lexi_color(bbox.lexi_type)
     # multiplying factor used to calculate font_scale in relation to height
     factor = .03
 
@@ -190,14 +218,15 @@ def continue_pipeline(images_path, temp_path, image_name):
     input_image = image_location(images_path, temp_path, image_name)
     with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'rb') as pkl_input:
         ocr_data = pickle.load(pkl_input)
-    complete_sentence = ''
-    for bbox in ocr_data:
-        complete_sentence = complete_sentence + bbox.bound_text + ' '
-    print(complete_sentence)
 
     # Fix all spellings
     fix_spelling(ocr_data)
+    ocr_data = fix_bound_text(ocr_data)
 
+    # Get lexigram data
+    get_lexigram(ocr_data[0])
+
+    # Create image object to return
     replaced_image_object = cv2.imread(
         os.path.join(input_image.images_path, input_image.image_name))
     # Remove original text from image

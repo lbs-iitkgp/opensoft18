@@ -15,6 +15,8 @@ class boundingBox:
     br = coordinate(0, 0)
     bl = coordinate(0, 0)
     bb_children = []
+    lexi_type = ''
+    lexi_label = ''
 
     def __init__(self, tl, tr, bl, br, bound_text, box_type, bb_chilren):
 
@@ -35,6 +37,9 @@ class boundingBox:
         self.bound_text = bound_text
         self.box_type = box_type
         self.bb_children = bb_chilren
+
+        self.lexi_type = ''
+        self.lexi_label = ''
 
     def __repr__(self):  # object definition
         return "<boundingBox box_type:%s bound_text:%s tl:(%s,%s) tr:(%s,%s) bl:(%s,%s) br:(%s,%s)>" % (self.box_type,
