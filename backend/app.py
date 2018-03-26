@@ -10,7 +10,7 @@ import logging, os
 import requests
 from flask_socketio import SocketIO, emit
 
-from utils import add_to_pipeline, continue_pipeline
+from utils import add_to_pipeline, continue_pipeline, finish_pipeline, do_download
 
 app = Flask(__name__)
 CORS(app)
@@ -94,6 +94,26 @@ def api_continue(image_id):
                 image=encoded_image.decode("utf-8"),
                 image_name=image_id
             )
+    except Exception as e:
+        app.logger.info(e)
+        return ("Error occured:- "+str(e), 400, {})
+
+@app.route('/finish/<string:image_id>', methods = ['GET'])
+def api_finish(image_id):
+    app.logger.info(PROJECT_HOME)
+    try:
+        final_json = finish_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id)
+        return jsonify()
+    except Exception as e:
+        app.logger.info(e)
+        return ("Error occured:- "+str(e), 400, {})
+
+@app.route('/download/<string:image_id>/<int:download_type>', methods = ['GET'])
+def download_asset(image_id, download_type):
+    app.logger.info(PROJECT_HOME)
+    try:
+        download_path = do_download(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id, download_type)
+        return send_file(download_path)
     except Exception as e:
         app.logger.info(e)
         return ("Error occured:- "+str(e), 400, {})

@@ -31,13 +31,14 @@ def get_names(in_str):
     """
     return pn.extract(in_str)
 
-def img_to_pdf(image):  # name of the image as input
-    pdf_bytes = img2pdf.convert([image])
-    date_string = time.strftime("%Y-%m-%d-%H:%M:%S.pdf")
-    file = open(date_string, "wb")
+def img_to_pdf(input_image):  # name of the image as input
+    replaced_image = os.path.join(input_image.temp_path, "replaced_" + input_image.image_name)
+    pdf_bytes = img2pdf.convert([replaced_image])
+    pdf_image = os.path.join(input_image.temp_path, "pdf_" + input_image.image_id + ".pdf")
+    file = open(pdf_image, "wb")
     file.write(pdf_bytes)
     file.close()
-    return date_string
+    return pdf_image
 
 def get_lexigram(bounding_boxes):
     """
@@ -52,7 +53,6 @@ def get_lexigram(bounding_boxes):
             if key not in lexigram_json:
                 lexigram_json[key] = set()
             lexigram_json[key] = lexigram_json[key].union(individual_json[key])
-
     return lexigram_json
 
 def fix_sentence_bound_text(bounding_box_list):
@@ -72,19 +72,17 @@ def fix_sentence_bound_text(bounding_box_list):
 
 def fix_spelling(bounding_box_list):
     """
-    Fixes spelling based on Azure spellchecker, metadata extraction and custom spellchecker
+    Fixes spelling based on Azure spellchecker and custom spellchecker
     :param bounding_box_list: a list of bounding boxes with bound_text
     :return: bounding_box_list: a list of bounding boxes with spell-fixed bound_text
     """
     # text = spellcheck_azure.make_correction(text)
-    # if lexigram.extract_metadata_json(text):
-    #     bounding_box_list.bound_text = text
-    #     return bounding_box_list
+
     for bbox in bounding_box_list:
         if bbox.box_type == 'W':
             text = spellcheck_custom.spellcor(bbox.bound_text)
             bbox.bound_text = text
-    
+
     bounding_box_list = fix_sentence_bound_text(bounding_box_list)
     return bounding_box_list
 
@@ -204,9 +202,31 @@ def continue_pipeline(images_path, temp_path, image_name):
     # cv2.imshow('replaced_image_object', replaced_image_object)
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
+
+    with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'wb') as pkl_output:
+        pickle.dump(ocr_data, pkl_output, pickle.HIGHEST_PROTOCOL)
+
     replaced_image = os.path.join(input_image.temp_path, "replaced_" + input_image.image_name)
     cv2.imwrite(replaced_image, replaced_image_object)
     return replaced_image
+
+def finish_pipeline(images_path, temp_path, image_name):
+    input_image = image_location(images_path, temp_path, image_name)
+    with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'rb') as pkl_input:
+        ocr_data = pickle.load(pkl_input)
+    final_json = {}
+    
+    # Create PDF
+    pdf_path = img_to_pdf(input_image)
+
+    return final_json
+
+def do_download(images_path, temp_path, image_name, download_type):
+    input_image = image_location(images_path, temp_path, image_name)
+    if download_type == 0:
+        return os.path.join(input_image.temp_path, "replaced_" + input_image.image_name)
+    elif download_type == 1:
+        return os.path.join(input_image.temp_path, "pdf_" + input_image.image_id + ".pdf")
 
 if __name__ == '__main__':
     print("hello!")

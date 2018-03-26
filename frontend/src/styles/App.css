@@ -61,11 +61,6 @@
   font-family: 'Pacifico', cursive;
 }
 
-.previews {
-  height: 80vh;
-  width: auto;
-}
-
 .previews img {
   max-height: 100%;
   max-width: 100%;

@@ -3,6 +3,7 @@ import axios from 'axios';
 import Dropzone from 'react-dropzone';
 // import Samples from './components/samples';
 import './styles/App.css';
+import './styles/buttons.css';
 import './styles/dropzone.css';
 import './styles/flexboxgrid/flexboxgrid.min.css';
 
@@ -12,10 +13,13 @@ class App extends Component {
     this.state = {
       preview: null,
       outputObjects: [],
+      image_name: '',
+      canDownload: false,
     };
 
     this.onDrop = this.onDrop.bind(this);
     this.resetImage = this.resetImage.bind(this);
+    this.doDownload = this.doDownload.bind(this);
   }
 
   onDrop(acceptedFiles) {
@@ -36,6 +40,7 @@ class App extends Component {
         console.log(data);
         this.setState({
           outputObjects: [...this.state.outputObjects, data.image],
+          image_name: data.image_name,
         });
         return axios({
           method: 'get',
@@ -47,6 +52,16 @@ class App extends Component {
         this.setState({
           outputObjects: [...this.state.outputObjects, data.image],
         });
+        return axios({
+          method: 'get',
+          url: `http://localhost:8080/finish/${data.image_name}`,
+        });
+      }).then((response) => {
+        const { data } = response;
+        console.log(data);
+        this.setState({
+          canDownload: true,
+        });
       });
     });
 
@@ -55,10 +70,33 @@ class App extends Component {
     });
   }
 
+  doDownload(index) {
+    return axios({
+      method: 'get',
+      url: `http://localhost:8080/download/${this.state.image_name}/${index}`,
+      responseType: 'blob',
+    }).then((response) => {
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      if (index === 0 || index === 2) {
+        link.setAttribute('download', `${this.state.image_name}`);
+      } else {
+        let filename = this.state.image_name;
+        filename = filename.substring(0, filename.lastIndexOf('.'));
+        link.setAttribute('download', `${filename}.pdf`);
+      }
+      document.body.appendChild(link);
+      link.click();
+    });
+  }
+
   resetImage() {
     this.setState({
       preview: null,
       outputObjects: [],
+      image_name: '',
+      canDownload: false,
     });
   }
 
@@ -135,6 +173,55 @@ class App extends Component {
                     </div>
                   )
                 }
+              </div>
+            }
+            {
+              this.state.canDownload &&
+              <div className="row download-buttons">
+                <div className="col-md-3 col-xs-6">
+                  <div
+                    className="download-button"
+                    onClick={() => this.doDownload(0)}
+                    onKeyPress={() => this.doDownload(0)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    Download overlaid image
+                  </div>
+                </div>
+                <div className="col-md-3 col-xs-6">
+                  <div
+                    className="download-button"
+                    onClick={() => this.doDownload(1)}
+                    onKeyPress={() => this.doDownload(1)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    Download overlaid PDF
+                  </div>
+                </div>
+                <div className="col-md-3 col-xs-6">
+                  <div
+                    className="download-button"
+                    onClick={() => this.doDownload(2)}
+                    onKeyPress={() => this.doDownload(2)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    Download clean image
+                  </div>
+                </div>
+                <div className="col-md-3 col-xs-6">
+                  <div
+                    className="download-button"
+                    onClick={() => this.doDownload(3)}
+                    onKeyPress={() => this.doDownload(3)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    Download clean PDF
+                  </div>
+                </div>
               </div>
             }
           </div>
