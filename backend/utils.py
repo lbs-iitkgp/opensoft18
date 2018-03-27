@@ -8,6 +8,8 @@ import numpy as np
 import img2pdf
 import cv2
 import pickle
+import math
+from PIL import ImageFont, ImageDraw, Image
 
 import utilities.pre_process as pp
 
@@ -151,6 +153,88 @@ def get_lexi_color(lexi_type):
         font_color = (102, 0, 0)
     return font_color
 
+def draw_rotated_text(image, angle, xy, text, fill, *args, **kwargs):
+    """ Draw text at an angle into an image, takes the same arguments
+        as Image.text() except for:
+
+    :param image: Image to write text into
+    :param angle: Angle to write text at
+    """
+    # get the size of our image
+    width, height = image.size
+    max_dim = max(width, height)
+
+    # build a transparency mask large enough to hold the text
+    mask_size = (max_dim * 2, max_dim * 2)
+    mask = Image.new('L', mask_size, 0)
+
+    # add text to mask
+    draw = ImageDraw.Draw(mask)
+    draw.text((max_dim, max_dim), text, 255, *args, **kwargs)
+
+    if angle % 90 == 0:
+        # rotate by multiple of 90 deg is easier
+        rotated_mask = mask.rotate(angle)
+    else:
+        # rotate an an enlarged mask to minimize jaggies
+        bigger_mask = mask.resize((max_dim*8, max_dim*8),
+                                  resample=Image.BICUBIC)
+        rotated_mask = bigger_mask.rotate(angle).resize(
+            mask_size, resample=Image.LANCZOS)
+
+    # crop the mask to match image
+    mask_xy = (max_dim - xy[0], max_dim - xy[1])
+    b_box = mask_xy + (mask_xy[0] + width, mask_xy[1] + height)
+    mask = rotated_mask.crop(b_box)
+
+    # paste the appropriate color, with the text transparency mask
+    color_image = Image.new('RGBA', image.size, fill)
+    image.paste(color_image, mask)
+
+def get_font(bbox, font_path):
+    fontsize = 1
+    bbox_fraction = 0.9
+    bbox_width = math.hypot(bbox.tl.x - bbox.tr.x, bbox.tl.y - bbox.tr.y)
+    bbox_height = math.hypot(bbox.tl.x - bbox.bl.x, bbox.tl.y - bbox.bl.y)
+
+    font = ImageFont.truetype(font_path, fontsize)
+    while (font.getsize(bbox.bound_text)[0] < bbox_fraction*bbox_width
+        and font.getsize(bbox.bound_text)[1] < bbox_fraction*bbox_height):
+        fontsize += 1
+        font = ImageFont.truetype(font_path, fontsize)
+    fontsize -= 1
+    fontsize = max(fontsize, 15)
+    font = ImageFont.truetype(font_path, fontsize)
+    return font
+
+def put_text_alt(cv_object, bbox_list):
+    """
+    put extracted text (in black) over the place of original text
+    :param in_img: cleaned image path
+    :param bbox: bounding box
+    :param img_object: replaced image object
+    """
+    cv_object = cv2.cvtColor(cv_object, cv2.COLOR_BGR2RGB)
+    image_object = Image.fromarray(cv_object)
+
+    for bbox in bbox_list:
+        if bbox.box_type == 'W':
+            font = get_font(bbox, os.path.join(
+                os.path.dirname(os.path.realpath(__file__)), "fonts", "Noto_Sans", "NotoSans-Bold.ttf"))
+            draw_rotated_text(
+                image_object,
+                math.degrees(math.atan2(bbox.bl.y - bbox.br.y, bbox.br.x - bbox.bl.x)),
+                # (bbox.tl.x + (bbox.tl.x - font_width)/2, bbox.tl.y + (bbox.tl.y - font_height)/2),
+                (bbox.tl.x, bbox.tl.y),
+                bbox.bound_text,
+                get_lexi_color(bbox.lexi_type),
+                font=font
+            )
+    image_object = image_object.convert('RGB')
+    cv_object = np.array(image_object)
+    cv_object = cv_object[:, :, ::-1].copy()
+    return cv_object
+
 def put_text(in_img, bbox):
     """
     put extracted text (in black) over the place of original text
@@ -195,7 +279,7 @@ def add_to_pipeline(images_path, temp_path, image_name):
     # Pre-processing
     # preprocess(input_image)
     preprocessed_image = input_image
-    
+
     # Get OCR data
     ocr_data = google_vision.get_google_ocr(input_image)
     # ocr_data = azure_vision.get_azure_ocr(input_image)
@@ -228,13 +312,18 @@ def continue_pipeline(images_path, temp_path, image_name):
     # Create image object to return
     replaced_image_object = cv2.imread(
         os.path.join(input_image.images_path, input_image.image_name))
+
     # Remove original text from image
     for bbox in ocr_data:
         remove_text(replaced_image_object, bbox)
-    # Put font text back on image
-    for bbox in ocr_data:
-        if bbox.box_type == 'W':
-            put_text(replaced_image_object, bbox)
+
+    ### Put font text back on image (using OpenCV)
+    # for bbox in ocr_data:
+    #     if bbox.box_type == 'W':
+    #         put_text(replaced_image_object, bbox)
+    ### Put font text back on image (using PIL)
+    replaced_image_object = put_text_alt(replaced_image_object, ocr_data)
+
     # cv2.imshow('replaced_image_object', replaced_image_object)
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
@@ -251,7 +340,7 @@ def finish_pipeline(images_path, temp_path, image_name):
     with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'rb') as pkl_input:
         ocr_data = pickle.load(pkl_input)
     final_json = {}
-    
+
     # Create PDF
     pdf_path = img_to_pdf(input_image)
 
