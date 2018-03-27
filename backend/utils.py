@@ -279,6 +279,25 @@ def put_text(in_img, bbox):
     # cv2.waitKey(0)
     return out_img
 
+def fix_orientation(image_path, bounding_boxes):
+    avg_angle = 0
+    image_object = cv2.imread(image_path)
+    for bbox in bounding_boxes[:5]:
+        angle = math.degrees(math.atan2(bbox.br.y - bbox.bl.y, bbox.br.x - bbox.bl.x))
+        avg_angle += angle
+    avg_angle /= 5
+    if avg_angle > -45 and avg_angle <= 45:
+        rotated_object = image_object
+        cv2.imwrite(image_path, rotated_object)
+    elif avg_angle > 45 and avg_angle <= 135:
+        rotated_object = cv2.rotate(image_object, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        cv2.imwrite(image_path, rotated_object)
+    elif avg_angle > -135 and avg_angle < 135:
+        rotated_object = cv2.rotate(image_object, cv2.ROTATE_90_CLOCKWISE)
+        cv2.imwrite(image_path, rotated_object)
+    else:
+        rotated_object = cv2.rotate(image_object, cv2.ROTATE_180)
+        cv2.imwrite(image_path, rotated_object)
 
 def call_CoreNLP(in_img,bounding_boxes) :
     # This calls core function to get name of hospital, address, doctors name ,specialisation
@@ -307,6 +326,7 @@ def add_to_pipeline(images_path, temp_path, image_name):
     # cv2.destroyAllWindows()
     bbl_image = os.path.join(input_image.temp_path, "bbl_" + input_image.image_name)
     cv2.imwrite(bbl_image, bbl_image_object)
+    fix_orientation(bbl_image, ocr_data)
     return bbl_image
 
 def continue_pipeline(images_path, temp_path, image_name):
@@ -347,6 +367,8 @@ def continue_pipeline(images_path, temp_path, image_name):
     cv2.imwrite(replaced_image, replaced_image_object)
     fresh_image = os.path.join(input_image.temp_path, "fresh_" + input_image.image_name)
     cv2.imwrite(fresh_image, fresh_image_object)
+    fix_orientation(replaced_image, ocr_data)
+    fix_orientation(fresh_image, ocr_data)
     return replaced_image, fresh_image, lexigram_json
 
 def finish_pipeline(images_path, temp_path, image_name):
