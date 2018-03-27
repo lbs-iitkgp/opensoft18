@@ -223,7 +223,7 @@ def continue_pipeline(images_path, temp_path, image_name):
     ocr_data = fix_bound_text(ocr_data)
 
     # Get lexigram data
-    get_lexigram(ocr_data[0])
+    lexigram_json = get_lexigram(ocr_data[0])
 
     # Create image object to return
     replaced_image_object = cv2.imread(
@@ -244,7 +244,7 @@ def continue_pipeline(images_path, temp_path, image_name):
 
     replaced_image = os.path.join(input_image.temp_path, "replaced_" + input_image.image_name)
     cv2.imwrite(replaced_image, replaced_image_object)
-    return replaced_image
+    return replaced_image, lexigram_json
 
 def finish_pipeline(images_path, temp_path, image_name):
     input_image = image_location(images_path, temp_path, image_name)

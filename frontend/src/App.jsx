@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import Dropzone from 'react-dropzone';
 // import Samples from './components/samples';
+import Lexigram from './components/lexigram';
 import './styles/App.css';
 import './styles/buttons.css';
 import './styles/dropzone.css';
@@ -15,6 +16,7 @@ class App extends Component {
       outputObjects: [],
       image_name: '',
       canDownload: false,
+      lexigramData: null,
     };
 
     this.onDrop = this.onDrop.bind(this);
@@ -51,6 +53,7 @@ class App extends Component {
         console.log(data);
         this.setState({
           outputObjects: [...this.state.outputObjects, data.image],
+          lexigramData: data.lexigram_data,
         });
         return axios({
           method: 'get',
@@ -97,10 +100,12 @@ class App extends Component {
       outputObjects: [],
       image_name: '',
       canDownload: false,
+      lexigramData: null,
     });
   }
 
   render() {
+    const { lexigramData } = this.state;
     return (
       <div className="App">
         <div className="App-welcome">
@@ -224,6 +229,21 @@ class App extends Component {
                 </div>
               </div>
             }
+            <div className="row">
+              <div className="col-xs-6 lexigram-table">
+                {
+                  lexigramData &&
+                  <div>
+                    <div className="lexigram-title">
+                      Medical knowledge
+                    </div>
+                    <Lexigram
+                      lexigramData={lexigramData}
+                    />
+                  </div>
+                }
+              </div>
+            </div>
           </div>
         </header>
       </div>

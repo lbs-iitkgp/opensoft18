@@ -1,0 +1,10 @@
+.lexigram-table {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+}
+
+.lexigram-title {
+    font-size: 1.25rem;
+}
