@@ -42,6 +42,8 @@ def parse_azure_ocr(azure_json):
     bb = boundingBox(c, c, c, c, "", "W", [])
     bbl = boundingBox(c, c, c, c, "", "W", [])
     llist = []
+    all_text = ''
+    all_list = []
     for i in range(slen):
         line = sentence[i]["words"]
         line_box = sentence[i]["boundingBox"]
@@ -63,15 +65,21 @@ def parse_azure_ocr(azure_json):
             bb.tr = coordinate(word_box[4], word_box[5])
             bb.tl = coordinate(word_box[6], word_box[7])
             bb.bound_text = word
+            all_text = all_text + bb.bound_text + " "
             bb.bb_children = []
             word_objects_list.append(bb)
+            all_list.append(bb)
             llist.append(copy.deepcopy(bb))
         bbl.bb_children = word_objects_list
         llist.append(copy.deepcopy(bbl))
+    llist.insert(0, boundingBox(c, c, c, c, all_text, "A", all_list))
     return llist
 
 def get_azure_ocr(input_image):
-    file_name = os.path.join(input_image.images_path, input_image.image_name)
+    if os.path.exists(os.path.join(input_image.temp_path, "white_" + input_image.image_name)):
+        file_name = os.path.join(input_image.temp_path, "white_" + input_image.image_name)
+    else:
+        file_name = os.path.join(input_image.images_path, input_image.image_name)
 
     response = fetch_response(file_name)
     operation_url = response.headers["Operation-Location"]

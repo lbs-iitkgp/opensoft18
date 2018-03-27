@@ -8,15 +8,13 @@ Credits to github@mzucker
 https://github.com/mzucker/noteshrink/
 """
 
-# for some reason pylint complains about members being undefined :(
-# pylint: disable=E1101
 
 from __future__ import print_function
 import sys
 import os
-from argparse import ArgumentParser
 import numpy as np
 from utilities.digicon_classes import image_location
+from subprocess import call
 
 # in some installation of PIL, Image can be imported directly
 try:
@@ -27,7 +25,15 @@ except ImportError:
 from scipy.cluster.vq import kmeans, vq
 
 # ignores division warnings caused in numpy
-np.seterr(divide='ignore', invalid='ignore') 
+np.seterr(divide='ignore', invalid='ignore')
+
+
+def whiteboard(input_image):
+    input_filename = os.path.join(input_image.images_path, input_image.image_name)
+    # os.system("./white.sh " + input_filename + " " + os.path.join(input_image.temp_path, "white_" +
+    # input_image.image_name))
+    call([os.path.join(os.path.dirname(os.path.realpath(__file__)), "white.sh"), input_filename,
+          os.path.join(input_image.temp_path, "white_" + input_image.image_name)])
 
 
 def quantize(image, bits_per_channel=None):
@@ -149,89 +155,6 @@ def percent(string):
     return float(string)/100.0
 
 
-def get_argument_parser():
-
-    """
-    Parse the command-line arguments for this program.
-    """
-
-    parser = ArgumentParser(
-        description='convert scanned, hand-written notes to PDF')
-
-    show_default = ' (default %(default)s)'
-
-    parser.add_argument('-b', dest='basename', metavar='BASENAME',
-                        default='page',
-                        help='output PNG filename base' + show_default)
-
-    parser.add_argument('-o', dest='pdfname', metavar='PDF',
-                        default='output.pdf',
-                        help='output PDF filename' + show_default)
-
-    parser.add_argument('-v', dest='value_threshold', metavar='PERCENT',
-                        type=percent, default='25',
-                        help='background value threshold %%'+show_default)
-
-    parser.add_argument('-s', dest='sat_threshold', metavar='PERCENT',
-                        type=percent, default='20',
-                        help='background saturation '
-                        'threshold %%'+show_default)
-
-    parser.add_argument('-n', dest='num_colors', type=int,
-                        default='8',
-                        help='number of output colors '+show_default)
-
-    parser.add_argument('-p', dest='sample_fraction',
-                        metavar='PERCENT',
-                        type=percent, default='5',
-                        help='%% of pixels to sample' + show_default)
-
-    parser.add_argument('-w', dest='white_bg', action='store_true',
-                        default=False, help='make background white')
-
-    parser.add_argument('-g', dest='global_palette',
-                        action='store_true', default=False,
-                        help='use one global palette for all pages')
-
-    parser.add_argument('-S', dest='saturate', action='store_false',
-                        default=True, help='do not saturate colors')
-
-    parser.add_argument('-K', dest='sort_numerically',
-                        action='store_false', default=True,
-                        help='keep filenames ordered as specified; '
-                        'use if you *really* want IMG_10.png to '
-                        'precede IMG_2.png')
-
-    parser.add_argument('-P', dest='postprocess_cmd', default=None,
-                        help='set postprocessing command (see -O, -C, -Q)')
-
-    parser.add_argument('-e', dest='postprocess_ext',
-                        default='_post.png',
-                        help='filename suffix/extension for '
-                        'postprocessing command')
-
-    parser.add_argument('-O', dest='postprocess_cmd',
-                        action='store_const',
-                        const='optipng -silent %i -out %o',
-                        help='same as -P "%(const)s"')
-
-    parser.add_argument('-C', dest='postprocess_cmd',
-                        action='store_const',
-                        const='pngcrush -q %i %o',
-                        help='same as -P "%(const)s"')
-
-    parser.add_argument('-Q', dest='postprocess_cmd',
-                        action='store_const',
-                        const='pngquant --ext %e %i',
-                        help='same as -P "%(const)s"')
-
-    parser.add_argument('-c', dest='pdf_cmd', metavar="COMMAND",
-                        default='convert %i %o',
-                        help='PDF command (default "%(default)s")')
-
-    return parser
-
-
 def load(input_filename):
 
     """Load an image with Pillow and convert it to numpy array. Also
@@ -257,7 +180,7 @@ returns the image DPI in x and y as a tuple."""
     return img, dpi
 
 
-def sample_pixels(img, options):
+def sample_pixels(img):
 
     """
     Pick a fixed percentage of pixels in the image, returned in random
@@ -266,7 +189,7 @@ def sample_pixels(img, options):
 
     pixels = img.reshape((-1, 3))
     num_pixels = pixels.shape[0]
-    num_samples = int(num_pixels*options.sample_fraction)
+    num_samples = int(num_pixels*float(.05))
 
     idx = np.arange(num_pixels)
     np.random.shuffle(idx)
@@ -274,7 +197,7 @@ def sample_pixels(img, options):
     return pixels[idx[:num_samples]]
 
 
-def get_fg_mask(bg_color, samples, options):
+def get_fg_mask(bg_color, samples):
 
     """
     Determine whether each pixel in a set of samples is foreground by
@@ -289,11 +212,11 @@ def get_fg_mask(bg_color, samples, options):
     s_diff = np.abs(s_bg - s_samples)
     v_diff = np.abs(v_bg - v_samples)
 
-    return ((v_diff >= options.value_threshold) |
-            (s_diff >= options.sat_threshold))
+    return ((v_diff >= float(.25)) |
+            (s_diff >= float(.20)))
 
 
-def get_palette(samples, options, return_mask=False, kmeans_iter=40):
+def get_palette(samples, return_mask=False, kmeans_iter=40):
 
     """
     Extract the palette for the set of sampled RGB values. The first
@@ -304,10 +227,10 @@ def get_palette(samples, options, return_mask=False, kmeans_iter=40):
 
     bg_color = get_bg_color(samples, 6)
 
-    fg_mask = get_fg_mask(bg_color, samples, options)
+    fg_mask = get_fg_mask(bg_color, samples)
 
     centers, _ = kmeans(samples[fg_mask].astype(np.float32),
-                        options.num_colors-1,
+                        7,
                         iter=kmeans_iter)
 
     palette = np.vstack((bg_color, centers)).astype(np.uint8)
@@ -318,7 +241,7 @@ def get_palette(samples, options, return_mask=False, kmeans_iter=40):
         return palette, fg_mask
 
 
-def apply_palette(img, palette, options):
+def apply_palette(img, palette):
 
     """
     Apply the pallete to the given image. The first step is to set all
@@ -329,7 +252,7 @@ def apply_palette(img, palette, options):
 
     bg_color = palette[0]
 
-    fg_mask = get_fg_mask(bg_color, img, options)
+    fg_mask = get_fg_mask(bg_color, img)
 
     orig_shape = img.shape
 
@@ -345,7 +268,7 @@ def apply_palette(img, palette, options):
     return labels.reshape(orig_shape[:-1])
 
 
-def save(output_filename, labels, palette, dpi, options):
+def save(output_filename, labels, palette, dpi):
 
     """
     Save the label/palette pair out as an indexed PNG image.  This
@@ -354,16 +277,11 @@ def save(output_filename, labels, palette, dpi, options):
     the background color to pure white.
     """
 
-    if options.saturate:
-        palette = palette.astype(np.float32)
-        pmin = palette.min()
-        pmax = palette.max()
-        palette = 255 * (palette - pmin)/(pmax-pmin)
-        palette = palette.astype(np.uint8)
-
-    if options.white_bg:
-        palette = palette.copy()
-        palette[0] = (255, 255, 255)
+    palette = palette.astype(np.float32)
+    pmin = palette.min()
+    pmax = palette.max()
+    palette = 255 * (palette - pmin)/(pmax-pmin)
+    palette = palette.astype(np.uint8)
 
     output_img = Image.fromarray(labels, 'P')
     output_img.putpalette(palette.flatten())
@@ -376,22 +294,23 @@ def notescan_main(input_image):
 
     """
     main function that processes the input file
-    :param input_filename: path to the image file to be loaded
+    :param input_image: path to the image file to be loaded
     :return: None
     """
     input_filename = os.path.join(input_image.images_path, input_image.image_name)
-
-    options = get_argument_parser().parse_args()
     img, dpi = load(input_filename)
     output_filename = os.path.join(input_image.temp_path, input_image.image_name)
 
-    samples = sample_pixels(img, options)
-    palette = get_palette(samples, options)
+    samples = sample_pixels(img)
+    palette = get_palette(samples)
 
-    labels = apply_palette(img, palette, options)
+    labels = apply_palette(img, palette)
 
-    save(output_filename, labels, palette, dpi, options)
+    save(output_filename, labels, palette, dpi)
 
 
 if __name__ == '__main__':
-    notescan_main("input.jpg")
+
+    # uncomment below lines for debugging
+    # notescan_main("input.jpg")
+    pass

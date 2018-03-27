@@ -9,8 +9,10 @@ import img2pdf
 import cv2
 import pickle
 import argparse
+import math
+from PIL import ImageFont, ImageDraw, Image
 
-import pre_process as pp
+import utilities.pre_process as pp
 
 from spellcheck import parse_name as pn
 from utilities.digicon_classes import coordinate, boundingBox, image_location
@@ -101,9 +103,9 @@ def preprocess(input_image):
     """
     pre-processes the image and converts to gray-scale
     :param input_image: path to the image to be processed
-    :return: out_image: processed image in cv2 format
     """
-    pp.notescan_main(input_image)
+    pp.whiteboard(input_image)
+    # pp.notescan_main(input_image)
 
 def get_names(in_str):
     """
@@ -120,24 +122,41 @@ def img_to_pdf(input_image):  # name of the image as input
     file = open(pdf_image, "wb")
     file.write(pdf_bytes)
     file.close()
-    return pdf_image
+    fresh_image = os.path.join(input_image.temp_path, "fresh_" + input_image.image_name)
+    pdf_bytes = img2pdf.convert([fresh_image])
+    fresh_pdf_image = os.path.join(input_image.temp_path, "freshpdf_" + input_image.image_id + ".pdf")
+    file = open(fresh_pdf_image, "wb")
+    file.write(pdf_bytes)
+    file.close()
+    return pdf_image, fresh_image
 
-def get_lexigram(bounding_boxes):
+def get_lexigram(bounding_box):
     """
     Extracts all possible metadata from all the bounding boxes
     :param bounding_box: a bounding box with bound_text
     :return: bounding_box: a bounding box with spell-fixed bound_text
     """
+    # The possible types detected by lexigraph are:
+    # findings, problems, drugs, devices, anatomy
     lexigram_json = {}
-    for bounding_box in bounding_boxes:
-        individual_json = lexigram.extract_metadata_json(bounding_box.bound_text)
-        for key in individual_json:
-            if key not in lexigram_json:
-                lexigram_json[key] = set()
-            lexigram_json[key] = lexigram_json[key].union(individual_json[key])
-    return lexigram_json
+    print(bounding_box.bound_text)
+    individual_json = lexigram.extract_metadata_json(bounding_box.bound_text)
+    # for key in individual_json:
+    #     if key not in lexigram_json:
+    #         lexigram_json[key] = set()
+    #     lexigram_json[key] = lexigram_json[key].union(individual_json[key])
+    print(individual_json)
+    for w_box in bounding_box.bb_children:
+        for finding_type in individual_json:
+            for finding in individual_json[finding_type]:
+                if finding['token'] == w_box.bound_text:
+                    w_box.lexi_type = finding_type
+                    w_box.lexi_label = finding['label']
+    # for w_box in bounding_box.bb_children:
+    #     print(w_box.bound_text)
+    return individual_json
 
-def fix_sentence_bound_text(bounding_box_list):
+def fix_bound_text(bounding_box_list):
     """
     Fixes the `bound_text` attribute for sentence level boundingBox objects
     using the bb_children attribute.
@@ -145,7 +164,7 @@ def fix_sentence_bound_text(bounding_box_list):
     :return: bounding_box_list: a list of bounding boxes with spell-fixed bound_text
     """
     for bbox in bounding_box_list:
-        if bbox.box_type == 'L':
+        if bbox.box_type == 'L' or bbox.box_type == 'A':
             bound_text = ''
             for child_box in bbox.bb_children:
                 bound_text = bound_text + child_box.bound_text + ' '
@@ -165,7 +184,7 @@ def fix_spelling(bounding_box_list):
             text = spellcheck_custom.spellcor(bbox.bound_text)
             bbox.bound_text = text
 
-    bounding_box_list = fix_sentence_bound_text(bounding_box_list)
+    bounding_box_list = fix_bound_text(bounding_box_list)
     return bounding_box_list
 
 def crop_image(input_image, x1, x2, y1, y2):
@@ -175,10 +194,11 @@ def crop_image(input_image, x1, x2, y1, y2):
 def remove_text(input_image, bb_object):
     if bb_object.box_type == 'W':
         img = input_image
-        x1 = bb_object.tl.x
-        x2 = bb_object.br.x
-        y1 = bb_object.tl.y
-        y2 = bb_object.br.y
+        x1 = min(bb_object.tl.x, bb_object.tr.x, bb_object.bl.x, bb_object.br.x)
+        x2 = max(bb_object.tl.x, bb_object.tr.x, bb_object.bl.x, bb_object.br.x)
+        y1 = min(bb_object.tl.y, bb_object.tr.y, bb_object.bl.y, bb_object.br.y)
+        y2 = max(bb_object.tl.y, bb_object.tr.y, bb_object.bl.y, bb_object.br.y)
+        # print(x1,x2,y1,y2)
         crop = crop_image(img, x1, x2, y1, y2)
         kernel = np.ones((5,5), np.uint8)
         # crop = cv2.erode(crop, kernel, iterations=5)
@@ -204,6 +224,110 @@ def draw_box(in_img, l_boxes, l_type='W'):
     # cv2.waitKey(0)
     return in_img
 
+def get_lexi_color(lexi_type):
+    # The possible types detected by lexigraph are:
+    # findings, problems, drugs, devices, anatomy
+    font_color = (0, 0, 0)
+    if lexi_type == 'FINDINGS':
+        font_color = (0, 153, 0)
+    elif lexi_type == 'PROBLEMS':
+        font_color = (102, 0, 51)
+    elif lexi_type == 'DRUGS':
+        font_color = (204, 102, 0)
+    elif lexi_type == 'DEVICES':
+        font_color = (255, 204, 0)
+    elif lexi_type == 'ANATOMY':
+        font_color = (102, 0, 0)
+    return font_color
+
+def draw_rotated_text(image, fresh_image, angle, xy, text, fill, *args, **kwargs):
+    """ Draw text at an angle into an image, takes the same arguments
+        as Image.text() except for:
+
+    :param image: Image to write text into
+    :param angle: Angle to write text at
+    """
+    # get the size of our image
+    width, height = image.size
+    max_dim = max(width, height)
+
+    # build a transparency mask large enough to hold the text
+    mask_size = (max_dim * 2, max_dim * 2)
+    mask = Image.new('L', mask_size, 0)
+
+    # add text to mask
+    draw = ImageDraw.Draw(mask)
+    draw.text((max_dim, max_dim), text, 255, *args, **kwargs)
+
+    if angle % 90 == 0:
+        # rotate by multiple of 90 deg is easier
+        rotated_mask = mask.rotate(angle)
+    else:
+        # rotate an an enlarged mask to minimize jaggies
+        bigger_mask = mask.resize((max_dim*8, max_dim*8),
+                                  resample=Image.BICUBIC)
+        rotated_mask = bigger_mask.rotate(angle).resize(
+            mask_size, resample=Image.LANCZOS)
+
+    # crop the mask to match image
+    mask_xy = (max_dim - xy[0], max_dim - xy[1])
+    b_box = mask_xy + (mask_xy[0] + width, mask_xy[1] + height)
+    mask = rotated_mask.crop(b_box)
+
+    # paste the appropriate color, with the text transparency mask
+    color_image = Image.new('RGBA', image.size, fill)
+    image.paste(color_image, mask)
+    fresh_image.paste(color_image, mask)
+
+def get_font(bbox, font_path):
+    fontsize = 1
+    bbox_fraction = 0.9
+    bbox_width = math.hypot(bbox.tl.x - bbox.tr.x, bbox.tl.y - bbox.tr.y)
+    bbox_height = math.hypot(bbox.tl.x - bbox.bl.x, bbox.tl.y - bbox.bl.y)
+
+    font = ImageFont.truetype(font_path, fontsize)
+    while (font.getsize(bbox.bound_text)[0] < bbox_fraction*bbox_width
+        and font.getsize(bbox.bound_text)[1] < bbox_fraction*bbox_height):
+        fontsize += 1
+        font = ImageFont.truetype(font_path, fontsize)
+    fontsize -= 1
+    fontsize = max(fontsize, 12)
+    font = ImageFont.truetype(font_path, fontsize)
+    return font
+
+def put_text_alt(cv_object, bbox_list):
+    """
+    put extracted text (in black) over the place of original text
+    :param in_img: cleaned image path
+    :param bbox: bounding box
+    :param img_object: replaced image object
+    """
+    cv_object = cv2.cvtColor(cv_object, cv2.COLOR_BGR2RGB)
+    image_object = Image.fromarray(cv_object)
+    fresh_image_object = Image.new('RGB', image_object.size, color=(255, 255, 255))
+
+    for bbox in bbox_list:
+        if bbox.box_type == 'W':
+            font = get_font(bbox, os.path.join(
+                os.path.dirname(os.path.realpath(__file__)), "fonts", "Noto_Sans", "NotoSans-Regular.ttf"))
+            draw_rotated_text(
+                image_object,
+                fresh_image_object,
+                math.degrees(math.atan2(bbox.bl.y - bbox.br.y, bbox.br.x - bbox.bl.x)),
+                # (bbox.tl.x + (bbox.tl.x - font_width)/2, bbox.tl.y + (bbox.tl.y - font_height)/2),
+                (bbox.tl.x, bbox.tl.y),
+                bbox.bound_text,
+                get_lexi_color(bbox.lexi_type),
+                font=font
+            )
+    image_object = image_object.convert('RGB')
+    cv_object = np.array(image_object)
+    cv_object = cv_object[:, :, ::-1].copy()
+    fresh_image_object = fresh_image_object.convert('RGB')
+    fresh_cv_object = np.array(fresh_image_object)
+    fresh_cv_object = fresh_cv_object[:, :, ::-1].copy()
+    return cv_object, fresh_cv_object
+
 def put_text(in_img, bbox):
     """
     put extracted text (in black) over the place of original text
@@ -213,7 +337,7 @@ def put_text(in_img, bbox):
     """
     out_img = in_img
     font = cv2.FONT_HERSHEY_DUPLEX
-    font_color = (0, 0, 0)
+    font_color = get_lexi_color(bbox.lexi_type)
     # multiplying factor used to calculate font_scale in relation to height
     factor = .03
 
@@ -250,6 +374,26 @@ def drugdose_detect(bb_object):
                     break
     return dosages
 
+def fix_orientation(image_path, bounding_boxes):
+    avg_angle = 0
+    image_object = cv2.imread(image_path)
+    for bbox in bounding_boxes[:5]:
+        angle = math.degrees(math.atan2(bbox.br.y - bbox.bl.y, bbox.br.x - bbox.bl.x))
+        avg_angle += angle
+    avg_angle /= 5
+    if avg_angle > -45 and avg_angle <= 45:
+        rotated_object = image_object
+        cv2.imwrite(image_path, rotated_object)
+    elif avg_angle > 45 and avg_angle <= 135:
+        rotated_object = cv2.rotate(image_object, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        cv2.imwrite(image_path, rotated_object)
+    elif avg_angle > -135 and avg_angle < 135:
+        rotated_object = cv2.rotate(image_object, cv2.ROTATE_90_CLOCKWISE)
+        cv2.imwrite(image_path, rotated_object)
+    else:
+        rotated_object = cv2.rotate(image_object, cv2.ROTATE_180)
+        cv2.imwrite(image_path, rotated_object)
+
 def call_CoreNLP(in_img,bounding_boxes) :
     # This calls core function to get name of hospital, address, doctors name ,specialisation
     height, width, _ = in_img.shape
@@ -259,12 +403,12 @@ def add_to_pipeline(images_path, temp_path, image_name):
     print(image_name)
     input_image = image_location(images_path, temp_path, image_name)
     # Pre-processing
-    # preprocessed_image = preprocess(input_image)
+    # preprocess(input_image)
     preprocessed_image = input_image
 
     # Get OCR data
-    ocr_data = google_vision.get_google_ocr(preprocessed_image)
-    # ocr_data = azure_vision.get_azure_ocr(preprocessed_image)
+    ocr_data = google_vision.get_google_ocr(input_image)
+    # ocr_data = azure_vision.get_azure_ocr(input_image)
     with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'wb') as pkl_output:
         pickle.dump(ocr_data, pkl_output, pickle.HIGHEST_PROTOCOL)
 
@@ -277,29 +421,36 @@ def add_to_pipeline(images_path, temp_path, image_name):
     # cv2.destroyAllWindows()
     bbl_image = os.path.join(input_image.temp_path, "bbl_" + input_image.image_name)
     cv2.imwrite(bbl_image, bbl_image_object)
+    fix_orientation(bbl_image, ocr_data)
     return bbl_image
 
 def continue_pipeline(images_path, temp_path, image_name):
     input_image = image_location(images_path, temp_path, image_name)
     with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'rb') as pkl_input:
         ocr_data = pickle.load(pkl_input)
-    complete_sentence = ''
-    for bbox in ocr_data:
-        complete_sentence = complete_sentence + bbox.bound_text + ' '
-    print(complete_sentence)
 
     # Fix all spellings
     fix_spelling(ocr_data)
+    ocr_data = fix_bound_text(ocr_data)
 
+    # Get lexigram data
+    lexigram_json = get_lexigram(ocr_data[0])
+
+    # Create image object to return
     replaced_image_object = cv2.imread(
         os.path.join(input_image.images_path, input_image.image_name))
+
     # Remove original text from image
     for bbox in ocr_data:
         remove_text(replaced_image_object, bbox)
-    # Put font text back on image
-    for bbox in ocr_data:
-        if bbox.box_type == 'W':
-            put_text(replaced_image_object, bbox)
+
+    ### Put font text back on image (using OpenCV)
+    # for bbox in ocr_data:
+    #     if bbox.box_type == 'W':
+    #         put_text(replaced_image_object, bbox)
+    ### Put font text back on image (using PIL)
+    replaced_image_object, fresh_image_object = put_text_alt(replaced_image_object, ocr_data)
+
     # cv2.imshow('replaced_image_object', replaced_image_object)
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
@@ -309,16 +460,20 @@ def continue_pipeline(images_path, temp_path, image_name):
 
     replaced_image = os.path.join(input_image.temp_path, "replaced_" + input_image.image_name)
     cv2.imwrite(replaced_image, replaced_image_object)
-    return replaced_image
+    fresh_image = os.path.join(input_image.temp_path, "fresh_" + input_image.image_name)
+    cv2.imwrite(fresh_image, fresh_image_object)
+    fix_orientation(replaced_image, ocr_data)
+    fix_orientation(fresh_image, ocr_data)
+    return replaced_image, fresh_image, lexigram_json
 
 def finish_pipeline(images_path, temp_path, image_name):
     input_image = image_location(images_path, temp_path, image_name)
     with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'rb') as pkl_input:
         ocr_data = pickle.load(pkl_input)
     final_json = {}
-    
+
     # Create PDF
-    pdf_path = img_to_pdf(input_image)
+    pdf_path, fresh_pdf_path = img_to_pdf(input_image)
 
     return final_json
 
@@ -328,6 +483,10 @@ def do_download(images_path, temp_path, image_name, download_type):
         return os.path.join(input_image.temp_path, "replaced_" + input_image.image_name)
     elif download_type == 1:
         return os.path.join(input_image.temp_path, "pdf_" + input_image.image_id + ".pdf")
+    elif download_type == 2:
+        return os.path.join(input_image.temp_path, "fresh_" + input_image.image_name)
+    elif download_type == 3:
+        return os.path.join(input_image.temp_path, "freshpdf_" + input_image.image_id + ".pdf")
 
 if __name__ == '__main__':
     print("hello!")

@@ -57,46 +57,51 @@ def index():
 @app.route('/upload', methods = ['POST'])
 def api_root():
     app.logger.info(PROJECT_HOME)
-    try:
+    # try:
+    img = request.files['image']
+    print(img)
+    if request.method == 'POST' and img and allowed_file(img.filename):
+        app.logger.info(app.config['UPLOAD_FOLDER'])
         img = request.files['image']
-        print(img)
-        if request.method == 'POST' and img and allowed_file(img.filename):
-            app.logger.info(app.config['UPLOAD_FOLDER'])
-            img = request.files['image']
-            create_new_folder(app.config['UPLOAD_FOLDER'])
-            create_new_folder(app.config['TEMP_FOLDER'])
-            file_name = str(time.time()).replace('.', '') + "_" + img.filename.replace('/','')
-            saved_path = os.path.join(app.config['UPLOAD_FOLDER'], file_name)
-            app.logger.info("saving {}".format(saved_path))
-            img.save(saved_path)
-            # return Response(stream_output(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], file_name))
-            bbox_image = add_to_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], file_name)
-            with open(bbox_image, "rb") as image_file:
-                encoded_image = base64.b64encode(image_file.read())
-            return jsonify(
-                image=encoded_image.decode("utf-8"),
-                image_name=file_name
-            )
-        else:
-            return Response("No image sent", status=401)
-    except Exception as e:
-        app.logger.info(e)
-        return Response("Error occured:- "+str(e), status=400)
+        create_new_folder(app.config['UPLOAD_FOLDER'])
+        create_new_folder(app.config['TEMP_FOLDER'])
+        file_name = str(time.time()).replace('.', '') + "_" + img.filename.replace('/','')
+        saved_path = os.path.join(app.config['UPLOAD_FOLDER'], file_name)
+        app.logger.info("saving {}".format(saved_path))
+        img.save(saved_path)
+        # return Response(stream_output(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], file_name))
+        bbox_image = add_to_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], file_name)
+        with open(bbox_image, "rb") as image_file:
+            encoded_image = base64.b64encode(image_file.read())
+        return jsonify(
+            image=encoded_image.decode("utf-8"),
+            image_name=file_name
+        )
+    else:
+        return Response("No image sent", status=401)
+    # except Exception as e:
+    #     app.logger.info(e)
+    #     return Response("Error occured:- "+str(e), status=400)
 
 @app.route('/continue/<string:image_id>', methods = ['GET'])
 def api_continue(image_id):
     app.logger.info(PROJECT_HOME)
-    try:
-        final_image = continue_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id)
-        with open(final_image, "rb") as image_file:
-            encoded_image = base64.b64encode(image_file.read())
-            return jsonify(
-                image=encoded_image.decode("utf-8"),
-                image_name=image_id
-            )
-    except Exception as e:
-        app.logger.info(e)
-        return ("Error occured:- "+str(e), 400, {})
+    # try:
+    replaced_image, fresh_image, lexigram_json = continue_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id)
+    with open(replaced_image, "rb") as image_file:
+        encoded_replaced_image = base64.b64encode(image_file.read())
+    with open(fresh_image, "rb") as image_file:
+        encoded_fresh_image = base64.b64encode(image_file.read())
+    return jsonify(
+        replaced_image=encoded_replaced_image.decode("utf-8"),
+        fresh_image=encoded_fresh_image.decode("utf-8"),
+        image_name=image_id,
+        lexigram_data=lexigram_json
+    )
+    # except Exception as e:
+    #     print(e)
+    #     app.logger.info(e)
+    #     return ("Error occured:- "+str(e), 400, {})
 
 @app.route('/finish/<string:image_id>', methods = ['GET'])
 def api_finish(image_id):

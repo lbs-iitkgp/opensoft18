@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import Dropzone from 'react-dropzone';
 // import Samples from './components/samples';
+import Lexigram from './components/lexigram';
 import './styles/App.css';
 import './styles/buttons.css';
 import './styles/dropzone.css';
@@ -15,11 +16,14 @@ class App extends Component {
       outputObjects: [],
       image_name: '',
       canDownload: false,
+      lexigramData: null,
+      isFresh: false,
     };
 
     this.onDrop = this.onDrop.bind(this);
     this.resetImage = this.resetImage.bind(this);
     this.doDownload = this.doDownload.bind(this);
+    this.flipFresh = this.flipFresh.bind(this);
   }
 
   onDrop(acceptedFiles) {
@@ -50,7 +54,9 @@ class App extends Component {
         const { data } = response;
         console.log(data);
         this.setState({
-          outputObjects: [...this.state.outputObjects, data.image],
+          outputObjects: [...this.state.outputObjects, data.replaced_image, data.fresh_image],
+          lexigramData: data.lexigram_data,
+          isFresh: false,
         });
         return axios({
           method: 'get',
@@ -97,10 +103,19 @@ class App extends Component {
       outputObjects: [],
       image_name: '',
       canDownload: false,
+      lexigramData: null,
+      isFresh: false,
+    });
+  }
+
+  flipFresh() {
+    this.setState({
+      isFresh: !this.state.isFresh,
     });
   }
 
   render() {
+    const { lexigramData } = this.state;
     return (
       <div className="App">
         <div className="App-welcome">
@@ -164,8 +179,20 @@ class App extends Component {
                 }
                 {
                   this.state.outputObjects[1] != null ? (
-                    <div className="bboxes-preview col-xs-4">
-                      <img src={`data:image/jpeg;base64,${this.state.outputObjects[1]}`} alt="Bounding boxes preview" />
+                    <div
+                      className="bboxes-preview col-xs-4 final-preview"
+                      onClick={() => this.flipFresh()}
+                      onKeyPress={() => this.flipFresh()}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      {
+                        this.state.isFresh ? (
+                          <img src={`data:image/jpeg;base64,${this.state.outputObjects[1]}`} alt="Bounding boxes preview" />
+                        ) : (
+                          <img src={`data:image/jpeg;base64,${this.state.outputObjects[2]}`} alt="Bounding boxes preview" />
+                        )
+                      }
                     </div>
                   ) : (
                     <div className="bboxes-preview col-xs-4">
@@ -224,6 +251,21 @@ class App extends Component {
                 </div>
               </div>
             }
+            <div className="row">
+              <div className="col-xs-6 lexigram-table">
+                {
+                  lexigramData &&
+                  <div>
+                    <div className="lexigram-title">
+                      Medical knowledge
+                    </div>
+                    <Lexigram
+                      lexigramData={lexigramData}
+                    />
+                  </div>
+                }
+              </div>
+            </div>
           </div>
         </header>
       </div>
