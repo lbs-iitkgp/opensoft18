@@ -87,14 +87,17 @@ def api_root():
 def api_continue(image_id):
     app.logger.info(PROJECT_HOME)
     # try:
-    final_image, lexigram_json = continue_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id)
-    with open(final_image, "rb") as image_file:
-        encoded_image = base64.b64encode(image_file.read())
-        return jsonify(
-            image=encoded_image.decode("utf-8"),
-            image_name=image_id,
-            lexigram_data=lexigram_json
-        )
+    replaced_image, fresh_image, lexigram_json = continue_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id)
+    with open(replaced_image, "rb") as image_file:
+        encoded_replaced_image = base64.b64encode(image_file.read())
+    with open(fresh_image, "rb") as image_file:
+        encoded_fresh_image = base64.b64encode(image_file.read())
+    return jsonify(
+        replaced_image=encoded_replaced_image.decode("utf-8"),
+        fresh_image=encoded_fresh_image.decode("utf-8"),
+        image_name=image_id,
+        lexigram_data=lexigram_json
+    )
     # except Exception as e:
     #     print(e)
     #     app.logger.info(e)

@@ -41,7 +41,13 @@ def img_to_pdf(input_image):  # name of the image as input
     file = open(pdf_image, "wb")
     file.write(pdf_bytes)
     file.close()
-    return pdf_image
+    fresh_image = os.path.join(input_image.temp_path, "fresh_" + input_image.image_name)
+    pdf_bytes = img2pdf.convert([fresh_image])
+    fresh_pdf_image = os.path.join(input_image.temp_path, "freshpdf_" + input_image.image_id + ".pdf")
+    file = open(fresh_pdf_image, "wb")
+    file.write(pdf_bytes)
+    file.close()
+    return pdf_image, fresh_image
 
 def get_lexigram(bounding_box):
     """
@@ -153,7 +159,7 @@ def get_lexi_color(lexi_type):
         font_color = (102, 0, 0)
     return font_color
 
-def draw_rotated_text(image, angle, xy, text, fill, *args, **kwargs):
+def draw_rotated_text(image, fresh_image, angle, xy, text, fill, *args, **kwargs):
     """ Draw text at an angle into an image, takes the same arguments
         as Image.text() except for:
 
@@ -190,6 +196,7 @@ def draw_rotated_text(image, angle, xy, text, fill, *args, **kwargs):
     # paste the appropriate color, with the text transparency mask
     color_image = Image.new('RGBA', image.size, fill)
     image.paste(color_image, mask)
+    fresh_image.paste(color_image, mask)
 
 def get_font(bbox, font_path):
     fontsize = 1
@@ -203,7 +210,7 @@ def get_font(bbox, font_path):
         fontsize += 1
         font = ImageFont.truetype(font_path, fontsize)
     fontsize -= 1
-    fontsize = max(fontsize, 15)
+    fontsize = max(fontsize, 12)
     font = ImageFont.truetype(font_path, fontsize)
     return font
 
@@ -216,13 +223,15 @@ def put_text_alt(cv_object, bbox_list):
     """
     cv_object = cv2.cvtColor(cv_object, cv2.COLOR_BGR2RGB)
     image_object = Image.fromarray(cv_object)
+    fresh_image_object = Image.new('RGB', image_object.size, color=(255, 255, 255))
 
     for bbox in bbox_list:
         if bbox.box_type == 'W':
             font = get_font(bbox, os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), "fonts", "Noto_Sans", "NotoSans-Bold.ttf"))
+                os.path.dirname(os.path.realpath(__file__)), "fonts", "Noto_Sans", "NotoSans-Regular.ttf"))
             draw_rotated_text(
                 image_object,
+                fresh_image_object,
                 math.degrees(math.atan2(bbox.bl.y - bbox.br.y, bbox.br.x - bbox.bl.x)),
                 # (bbox.tl.x + (bbox.tl.x - font_width)/2, bbox.tl.y + (bbox.tl.y - font_height)/2),
                 (bbox.tl.x, bbox.tl.y),
@@ -233,7 +242,10 @@ def put_text_alt(cv_object, bbox_list):
     image_object = image_object.convert('RGB')
     cv_object = np.array(image_object)
     cv_object = cv_object[:, :, ::-1].copy()
-    return cv_object
+    fresh_image_object = fresh_image_object.convert('RGB')
+    fresh_cv_object = np.array(fresh_image_object)
+    fresh_cv_object = fresh_cv_object[:, :, ::-1].copy()
+    return cv_object, fresh_cv_object
 
 def put_text(in_img, bbox):
     """
@@ -322,7 +334,7 @@ def continue_pipeline(images_path, temp_path, image_name):
     #     if bbox.box_type == 'W':
     #         put_text(replaced_image_object, bbox)
     ### Put font text back on image (using PIL)
-    replaced_image_object = put_text_alt(replaced_image_object, ocr_data)
+    replaced_image_object, fresh_image_object = put_text_alt(replaced_image_object, ocr_data)
 
     # cv2.imshow('replaced_image_object', replaced_image_object)
     # cv2.waitKey(0)
@@ -333,7 +345,9 @@ def continue_pipeline(images_path, temp_path, image_name):
 
     replaced_image = os.path.join(input_image.temp_path, "replaced_" + input_image.image_name)
     cv2.imwrite(replaced_image, replaced_image_object)
-    return replaced_image, lexigram_json
+    fresh_image = os.path.join(input_image.temp_path, "fresh_" + input_image.image_name)
+    cv2.imwrite(fresh_image, fresh_image_object)
+    return replaced_image, fresh_image, lexigram_json
 
 def finish_pipeline(images_path, temp_path, image_name):
     input_image = image_location(images_path, temp_path, image_name)
@@ -342,7 +356,7 @@ def finish_pipeline(images_path, temp_path, image_name):
     final_json = {}
 
     # Create PDF
-    pdf_path = img_to_pdf(input_image)
+    pdf_path, fresh_pdf_path = img_to_pdf(input_image)
 
     return final_json
 
@@ -352,6 +366,10 @@ def do_download(images_path, temp_path, image_name, download_type):
         return os.path.join(input_image.temp_path, "replaced_" + input_image.image_name)
     elif download_type == 1:
         return os.path.join(input_image.temp_path, "pdf_" + input_image.image_id + ".pdf")
+    elif download_type == 2:
+        return os.path.join(input_image.temp_path, "fresh_" + input_image.image_name)
+    elif download_type == 3:
+        return os.path.join(input_image.temp_path, "freshpdf_" + input_image.image_id + ".pdf")
 
 if __name__ == '__main__':
     print("hello!")
