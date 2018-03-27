@@ -5,7 +5,9 @@ class coordinate:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-
+    
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
 class boundingBox:
     bound_text = ''
@@ -40,6 +42,7 @@ class boundingBox:
 
         self.lexi_type = ''
         self.lexi_label = ''
+        self.dosage = {}
 
     def __repr__(self):  # object definition
         return "<boundingBox box_type:%s bound_text:%s tl:(%s,%s) tr:(%s,%s) bl:(%s,%s) br:(%s,%s)>" % (self.box_type,
@@ -48,6 +51,9 @@ class boundingBox:
     def __str__(self):  # print statement
         return "box_type:%s \nbound_text:%s \ntl:(%s,%s) \ntr:(%s,%s) \nbl:(%s,%s) \nbr:(%s,%s)" % (self.box_type,
             self.bound_text, self.tl.x, self.tl.y, self.tr.x, self.tr.y, self.bl.x, self.bl.y, self.br.x, self.br.y)
+    
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
 class image_location:
     images_path = ''

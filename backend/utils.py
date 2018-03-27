@@ -49,7 +49,19 @@ def img_to_pdf(input_image):  # name of the image as input
     file.close()
     return pdf_image, fresh_image
 
-def get_lexigram(bounding_box):
+def drugdose_detect(bb_object, finding, all_boxes):
+    for bbox in all_boxes:
+        if bbox.box_type == 'L':
+            for bb_child in bbox.bb_children:
+                if bb_object == bb_child:
+                    full_text = bbox.bound_text
+                    drug, dosage = full_text.split(finding['token'], 1)
+                    bb_object.dosage = {
+                        'drug': finding['label'],
+                        'dosage': dosage
+                    }
+
+def get_lexigram(bounding_box, all_boxes):
     """
     Extracts all possible metadata from all the bounding boxes
     :param bounding_box: a bounding box with bound_text
@@ -57,13 +69,15 @@ def get_lexigram(bounding_box):
     """
     # The possible types detected by lexigraph are:
     # findings, problems, drugs, devices, anatomy
-    lexigram_json = {}
+    # lexigram_json = {}
     print(bounding_box.bound_text)
     individual_json = lexigram.extract_metadata_json(bounding_box.bound_text)
     # for key in individual_json:
     #     if key not in lexigram_json:
     #         lexigram_json[key] = set()
     #     lexigram_json[key] = lexigram_json[key].union(individual_json[key])
+    for finding_type in individual_json:
+        individual_json[finding_type] = [finding for finding in individual_json[finding_type] if len(finding['token']) >= 2]
     print(individual_json)
     for w_box in bounding_box.bb_children:
         for finding_type in individual_json:
@@ -71,6 +85,8 @@ def get_lexigram(bounding_box):
                 if finding['token'] == w_box.bound_text:
                     w_box.lexi_type = finding_type
                     w_box.lexi_label = finding['label']
+                    if finding_type == 'DRUGS':
+                        drugdose_detect(w_box, finding, all_boxes)
     # for w_box in bounding_box.bb_children:
     #     print(w_box.bound_text)
     return individual_json
@@ -102,8 +118,6 @@ def fix_spelling(bounding_box_list):
         if bbox.box_type == 'W':
             text = spellcheck_custom.spellcor(bbox.bound_text)
             bbox.bound_text = text
-
-    bounding_box_list = fix_bound_text(bounding_box_list)
     return bounding_box_list
 
 def crop_image(input_image, x1, x2, y1, y2):
@@ -335,11 +349,11 @@ def continue_pipeline(images_path, temp_path, image_name):
         ocr_data = pickle.load(pkl_input)
 
     # Fix all spellings
-    fix_spelling(ocr_data)
+    ocr_data = fix_spelling(ocr_data)
     ocr_data = fix_bound_text(ocr_data)
 
     # Get lexigram data
-    lexigram_json = get_lexigram(ocr_data[0])
+    lexigram_json = get_lexigram(ocr_data[0], ocr_data)
 
     # Create image object to return
     replaced_image_object = cv2.imread(
