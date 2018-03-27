@@ -10,4 +10,5 @@ opencv-python
 flask-socketio
 flask-cors
 google.cloud
+python-dotenv
 
