@@ -69,13 +69,15 @@ def get_lexigram(bounding_box, all_boxes):
     """
     # The possible types detected by lexigraph are:
     # findings, problems, drugs, devices, anatomy
-    lexigram_json = {}
+    # lexigram_json = {}
     print(bounding_box.bound_text)
     individual_json = lexigram.extract_metadata_json(bounding_box.bound_text)
     # for key in individual_json:
     #     if key not in lexigram_json:
     #         lexigram_json[key] = set()
     #     lexigram_json[key] = lexigram_json[key].union(individual_json[key])
+    for finding_type in individual_json:
+        individual_json[finding_type] = [finding for finding in individual_json[finding_type] if len(finding['token']) >= 2]
     print(individual_json)
     for w_box in bounding_box.bb_children:
         for finding_type in individual_json:
