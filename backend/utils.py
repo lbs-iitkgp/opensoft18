@@ -8,7 +8,6 @@ import numpy as np
 import img2pdf
 import cv2
 import pickle
-import argparse
 import math
 from PIL import ImageFont, ImageDraw, Image
 
@@ -18,86 +17,6 @@ from spellcheck import parse_name as pn
 from utilities.digicon_classes import coordinate, boundingBox, image_location
 from vision_api import google_vision, azure_vision
 from spellcheck import lexigram, spellcheck_azure, spellcheck_custom
-
-
-def rotate_a_rightup_image(image):
-    # construct the argument parse and parse the arguments
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-i", "--image", required=True, help="path to input image file")
-    args = vars(ap.parse_args())
-
-    # load the image from disk and convert the image to grayscale
-    image = cv2.imread(args["image"],0)
-    
-    # flip the foreground and background to ensure foreground is now "white" and
-    # the background is "black"
-    gray = cv2.bitwise_not(image)
-    # threshold the image, setting all foreground pixels to
-    # 255 and all background pixels to 0
-    thresh = cv2.threshold(gray, 0, 255,cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-    coords = np.column_stack(np.where(thresh > 0))
-
-    # find (x, y) coordinates of all pixel values that
-    # are greater than zero, then use these coordinates to
-    # compute a rotated bounding box that contains all
-    # coordinates
-    angle = cv2.minAreaRect(coords)[-1]
-    print(angle)
-
-    if angle == 0.0:
-        cv2.imshow("Input", image)
-        cv2.waitKey(0)
-    else :
-        angle = -(90 + angle) 
-        #rotate the image to deskew it
-        (h,w) = image.shape[:2]
-        center = (w // 2, h // 2)
-        M = cv2.getRotationMatrix2D(center, angle, 1.0)
-        rotated = cv2.warpAffine(image, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)   
-        print("[INFO] angle: {:.3f}".format(angle))
-        cv2.imshow("Input", image)
-        cv2.imshow("Rotated", rotated)
-        cv2.waitKey(0)
-
-def rotated_a_leftup_image(image):
-
-    # construct the argument parse and parse the arguments
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-i", "--image", required=True, help="path to input image file")
-    args = vars(ap.parse_args())
-
-    # load the image from disk and convert the image to grayscale
-    image = cv2.imread(args["image"],0)
-    
-    # flip the foreground and background to ensure foreground is now "white" and
-    # the background is "black"
-    gray = cv2.bitwise_not(image)
-    # threshold the image, setting all foreground pixels to
-    # 255 and all background pixels to 0
-    thresh = cv2.threshold(gray, 0, 255,cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-    coords = np.column_stack(np.where(thresh > 0))
-
-    # find (x, y) coordinates of all pixel values that
-    # are greater than zero, then use these coordinates to
-    # compute a rotated bounding box that contains all
-    # coordinates
-    angle = cv2.minAreaRect(coords)[-1]
-    print(angle)
-
-    if angle == 0.0:
-        cv2.imshow("Input", image)
-        cv2.waitKey(0)
-    else :
-        angle = -angle 
-        #rotate the image to deskew it
-        (h,w) = image.shape[:2]
-        center = (w // 2, h // 2)
-        M = cv2.getRotationMatrix2D(center, angle, 1.0)
-        rotated = cv2.warpAffine(image, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)   
-        print("[INFO] angle: {:.3f}".format(angle))
-        cv2.imshow("Input", image)
-        cv2.imshow("Rotated", rotated)
-        cv2.waitKey(0)
 
 def preprocess(input_image):
     """
@@ -130,7 +49,19 @@ def img_to_pdf(input_image):  # name of the image as input
     file.close()
     return pdf_image, fresh_image
 
-def get_lexigram(bounding_box):
+def drugdose_detect(bb_object, finding, all_boxes):
+    for bbox in all_boxes:
+        if bbox.box_type == 'L':
+            for bb_child in bbox.bb_children:
+                if bb_object == bb_child:
+                    full_text = bbox.bound_text
+                    drug, dosage = full_text.split(finding['token'], 1)
+                    bb_object.dosage = {
+                        'drug': finding['label'],
+                        'dosage': dosage
+                    }
+
+def get_lexigram(bounding_box, all_boxes):
     """
     Extracts all possible metadata from all the bounding boxes
     :param bounding_box: a bounding box with bound_text
@@ -152,6 +83,8 @@ def get_lexigram(bounding_box):
                 if finding['token'] == w_box.bound_text:
                     w_box.lexi_type = finding_type
                     w_box.lexi_label = finding['label']
+                    if finding_type == 'DRUGS':
+                        drugdose_detect(w_box, finding, all_boxes)
     # for w_box in bounding_box.bb_children:
     #     print(w_box.bound_text)
     return individual_json
@@ -183,8 +116,6 @@ def fix_spelling(bounding_box_list):
         if bbox.box_type == 'W':
             text = spellcheck_custom.spellcor(bbox.bound_text)
             bbox.bound_text = text
-
-    bounding_box_list = fix_bound_text(bounding_box_list)
     return bounding_box_list
 
 def crop_image(input_image, x1, x2, y1, y2):
@@ -360,20 +291,6 @@ def put_text(in_img, bbox):
     # cv2.waitKey(0)
     return out_img
 
-def drugdose_detect(bb_object):
-    dosages = []
-    if bb_object.box_type == 'L':
-        for i in range(len(bb_object)):
-            if lexigram.has_medicine(bb_object.bb_children[i].bound_text) :
-                j = i + 1
-                try:
-                    while !(lexigram.has_medicine(bb_object.bb_children[j].bound_text)) :
-                        dosages.append(str((bb_object.bb_children[j].bound_text))+' ')
-                        j += 1
-                except KeyError:
-                    break
-    return dosages
-
 def fix_orientation(image_path, bounding_boxes):
     avg_angle = 0
     image_object = cv2.imread(image_path)
@@ -430,11 +347,11 @@ def continue_pipeline(images_path, temp_path, image_name):
         ocr_data = pickle.load(pkl_input)
 
     # Fix all spellings
-    fix_spelling(ocr_data)
+    ocr_data = fix_spelling(ocr_data)
     ocr_data = fix_bound_text(ocr_data)
 
     # Get lexigram data
-    lexigram_json = get_lexigram(ocr_data[0])
+    lexigram_json = get_lexigram(ocr_data[0], ocr_data)
 
     # Create image object to return
     replaced_image_object = cv2.imread(

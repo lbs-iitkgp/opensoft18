@@ -29,11 +29,11 @@ def parse_google_ocr(ocr_response):
     sentence_bounds = []
     word_bounds = []
     all_text = ''
-    all_list = []
     temp_coordinate = coordinate(0, 0)
     for page in ocr_response.pages:
         for block in page.blocks:
             for paragraph in block.paragraphs:
+                paragraph_bounds = []
                 sentence_string = ''
                 sentence_bbox = paragraph.bounding_box
                 for word in paragraph.words:
@@ -51,16 +51,16 @@ def parse_google_ocr(ocr_response):
                         word_string, 'W', []
                     )
                     word_bounds.append(word_bbox_object)
-                    all_list.append(word_bbox_object)
+                    paragraph_bounds.append(word_bbox_object)
                 sentence_bbox_object = boundingBox(
                     coordinate(sentence_bbox.vertices[0].x, sentence_bbox.vertices[0].y),
                     coordinate(sentence_bbox.vertices[1].x, sentence_bbox.vertices[1].y),
                     coordinate(sentence_bbox.vertices[3].x, sentence_bbox.vertices[3].y),
                     coordinate(sentence_bbox.vertices[2].x, sentence_bbox.vertices[2].y),
-                    sentence_string, 'L', word_bounds
+                    sentence_string, 'L', paragraph_bounds
                 )
                 sentence_bounds.append(sentence_bbox_object)
-    all_bound = boundingBox(temp_coordinate, temp_coordinate, temp_coordinate, temp_coordinate, all_text, 'A', all_list)
+    all_bound = boundingBox(temp_coordinate, temp_coordinate, temp_coordinate, temp_coordinate, all_text, 'A', word_bounds)
     return [all_bound] + word_bounds + sentence_bounds
 
 def get_google_ocr(input_image):
