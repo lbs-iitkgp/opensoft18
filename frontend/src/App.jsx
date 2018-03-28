@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import Dropzone from 'react-dropzone';
+import DisplacyEnt from './js/displacy-ent';
 // import Samples from './components/samples';
 import Lexigram from './components/lexigram';
 import Dosage from './components/dosage';
 import './styles/App.css';
 import './styles/buttons.css';
 import './styles/dropzone.css';
+import './styles/displacy.css';
 import './styles/flexboxgrid/flexboxgrid.min.css';
 
 class App extends Component {
@@ -20,12 +22,14 @@ class App extends Component {
       lexigramData: null,
       dosageData: null,
       isFresh: false,
+      allText: null,
     };
 
     this.onDrop = this.onDrop.bind(this);
     this.resetImage = this.resetImage.bind(this);
     this.doDownload = this.doDownload.bind(this);
     this.flipFresh = this.flipFresh.bind(this);
+    this.renderSpacy = this.renderSpacy.bind(this);
   }
 
   onDrop(acceptedFiles) {
@@ -47,7 +51,9 @@ class App extends Component {
         this.setState({
           outputObjects: [...this.state.outputObjects, data.image],
           image_name: data.image_name,
+          allText: data.all_text,
         });
+        this.renderSpacy();
         return axios({
           method: 'get',
           url: `http://localhost:8080/continue/${data.image_name}`,
@@ -109,6 +115,7 @@ class App extends Component {
       lexigramData: null,
       dosageData: null,
       isFresh: false,
+      allText: null,
     });
   }
 
@@ -116,6 +123,15 @@ class App extends Component {
     this.setState({
       isFresh: !this.state.isFresh,
     });
+  }
+
+  renderSpacy() {
+    const displacy = new DisplacyEnt('http://localhost:8080', {
+      container: '#displacy',
+    });
+
+    const ents = ['person', 'org', 'gpe', 'loc', 'product'];
+    displacy.render(this.state.allText.text, this.state.allText.ents, ents);
   }
 
   render() {
@@ -205,6 +221,15 @@ class App extends Component {
                     </div>
                   )
                 }
+              </div>
+            }
+            {
+              this.state.allText &&
+              <div className="row spacy-out">
+                <div className="spacy-header">
+                  (Direct) Named Entities detected
+                </div>
+                <div className="col-xs-12 spacy-content" id="displacy" />
               </div>
             }
             {

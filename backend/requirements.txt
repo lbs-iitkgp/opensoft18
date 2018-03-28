@@ -13,4 +13,4 @@ google.cloud
 google-cloud-vision
 python-dotenv
 stanfordcorenlp
-
+spacy

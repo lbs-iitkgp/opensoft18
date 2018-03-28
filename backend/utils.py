@@ -14,6 +14,7 @@ from PIL import ImageFont, ImageDraw, Image
 import utilities.pre_process as pp
 
 # from spellcheck import parse_name as pn
+from utilities.ner import render_ner
 from utilities.digicon_classes import coordinate, boundingBox, image_location
 from vision_api import google_vision, azure_vision
 from spellcheck import lexigram, spellcheck_azure, spellcheck_custom
@@ -148,7 +149,7 @@ def remove_text(input_image, bb_object):
         # crop = cv2.inpaint(crop, crop, 3, cv2.INPAINT_TELEA)
         input_image[y1:y2, x1:x2] = crop
 
-def draw_box(in_img, l_boxes, l_type='L'):
+def draw_box(in_img, l_boxes, l_type='W'):
     """
     draw red bounding boxes for line ('W') box_types
     :param in_img: input image in opencv format
@@ -331,6 +332,9 @@ def call_CoreNLP(in_img,bounding_boxes) :
     height, width, _ = in_img.shape
     return cnlp.core(height,width,bounding_boxes) #Output as a list - refer Readme_nlp
 
+def get_all_text(bounding_boxes):
+    return bounding_boxes[0].bound_text
+
 def add_to_pipeline(images_path, temp_path, image_name):
     print(image_name)
     input_image = image_location(images_path, temp_path, image_name)
@@ -359,7 +363,7 @@ def add_to_pipeline(images_path, temp_path, image_name):
     bbl_image = os.path.join(input_image.temp_path, "bbl_" + input_image.image_name)
     cv2.imwrite(bbl_image, bbl_image_object)
     fix_orientation(bbl_image, ocr_data)
-    return bbl_image
+    return bbl_image, render_ner(get_all_text(ocr_data))
 
 def continue_pipeline(images_path, temp_path, image_name):
     input_image = image_location(images_path, temp_path, image_name)

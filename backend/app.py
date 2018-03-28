@@ -70,12 +70,13 @@ def api_root():
         app.logger.info("saving {}".format(saved_path))
         img.save(saved_path)
         # return Response(stream_output(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], file_name))
-        bbox_image = add_to_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], file_name)
+        bbox_image, all_text = add_to_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], file_name)
         with open(bbox_image, "rb") as image_file:
             encoded_image = base64.b64encode(image_file.read())
         return jsonify(
             image=encoded_image.decode("utf-8"),
-            image_name=file_name
+            image_name=file_name,
+            all_text=all_text
         )
     else:
         return Response("No image sent", status=401)
