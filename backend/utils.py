@@ -17,7 +17,7 @@ import utilities.pre_process as pp
 from utilities.digicon_classes import coordinate, boundingBox, image_location
 from vision_api import google_vision, azure_vision
 from spellcheck import lexigram, spellcheck_azure, spellcheck_custom
-import CoreNLP as cnlp
+import CoreNLP2 as cnlp
 
 def preprocess(input_image):
     """
