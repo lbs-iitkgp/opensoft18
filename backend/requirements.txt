@@ -11,4 +11,5 @@ flask-socketio
 flask-cors
 google.cloud
 python-dotenv
+stanfordcorenlp
 
