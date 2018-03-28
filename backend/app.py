@@ -106,12 +106,12 @@ def api_continue(image_id):
 @app.route('/finish/<string:image_id>', methods = ['GET'])
 def api_finish(image_id):
     app.logger.info(PROJECT_HOME)
-    try:
-        final_json = finish_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id)
-        return jsonify()
-    except Exception as e:
-        app.logger.info(e)
-        return ("Error occured:- "+str(e), 400, {})
+    # try:
+    final_json = finish_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id)
+    return jsonify()
+    # except Exception as e:
+    #     app.logger.info(e)
+    #     return ("Error occured:- "+str(e), 400, {})
 
 @app.route('/download/<string:image_id>/<int:download_type>', methods = ['GET'])
 def download_asset(image_id, download_type):

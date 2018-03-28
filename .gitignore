@@ -16,3 +16,6 @@ yarn-error.log
 
 # Env settings
 .env
+
+# CoreNLP folder
+corenlp

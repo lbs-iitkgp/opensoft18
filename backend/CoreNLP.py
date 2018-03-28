@@ -1,3 +1,4 @@
+import os
 from stanfordcorenlp import StanfordCoreNLP
 
 def list_match(l1,l2) : #Function to check whether lists have any element in common
@@ -18,7 +19,9 @@ def word_match(l1,w) : #Function to check for 2d lists have the word 'w' as an e
 
 
 def core(rows,cols,boundbox): # The main function of this file
-	nlp = StanfordCoreNLP(r'/home/ayushk4/CoreNLP/stanford-corenlp-full-2018-02-27') # Replace this addres by the place where you unzip the file of NLP installation
+	# Replace this addres by the place where you unzip the file of NLP installation
+	nlp = StanfordCoreNLP(
+		os.path.join(os.path.dirname(os.path.realpath(__file__)), "corenlp", "stanford-corenlp-full-2018-02-27"))
 
 	#y axis assumed vertical/height and x- axis is horizontal/width
 
@@ -33,10 +36,10 @@ def core(rows,cols,boundbox): # The main function of this file
 	lis=["hospital","clinic","center","centre","diagnostic","diagnostics"] #usually this is what name of hospital has, check spellings and add more if any
 	
 	while boundbox[i].tl.y<0.3*rows: # we will check in the top 30% of paper only
-		list1=nlp.pos_tag(boundbox[i].boundtext)
+		list1=nlp.pos_tag(boundbox[i].bound_text)
 
 		if word_match(list1,"CD") :             #more than one phone no.
-			list1=nlp.ner(boundbox[i].boundtext)
+			list1=nlp.ner(boundbox[i].bound_text)
 			k=word_match (list1,"NUMBER")
 			
 			if k>0:
@@ -55,18 +58,18 @@ def core(rows,cols,boundbox): # The main function of this file
 
 
 	lis1=[]
-	lis1=nlp.tokenise(boundbox[0].boundtext) #tokenise is a basic function seperates string into words/indivisual characters/symbols
+	lis1=nlp.tokenise(boundbox[0].bound_text) #tokenise is a basic function seperates string into words/indivisual characters/symbols
 
 
 
 
 
-	if list_match(lis1,lis) : # and (not(substring_match(boundbox[0].boundtext,"dr."))):    # checks for the hospital name
-		hosp=bounding_box[j].boundtext
+	if list_match(lis1,lis) : # and (not(substring_match(boundbox[0].bound_text,"dr."))):    # checks for the hospital name
+		hosp=bounding_box[j].bound_text
 		
 		
-		k=word_match(nlp.ner(boundbox[j].boundtext),"LOCATION")
-		lis1=nlp.pos(boundbox[j].boundtext)
+		k=word_match(nlp.ner(boundbox[j].bound_text),"LOCATION")
+		lis1=nlp.pos(boundbox[j].bound_text)
 		if k>0 :
 			i=k
 			
@@ -94,8 +97,8 @@ def core(rows,cols,boundbox): # The main function of this file
 		if  boundbox[0].tl.x<x and x>boundbox[0].tr.x and boundbox[j].tl.y>y :
 
 
-			k=word_match(nlp.ner(boundbox[j].boundtext),"LOCATION")
-			lis1=nlp.pos(boundbox[j].boundtext)
+			k=word_match(nlp.ner(boundbox[j].bound_text),"LOCATION")
+			lis1=nlp.pos(boundbox[j].bound_text)
 			
 			if k>0 :
 				i=k
@@ -113,8 +116,8 @@ def core(rows,cols,boundbox): # The main function of this file
 
 
 
-#			if word_match(nlp.pos_tag(boundbox[j].boundtext),"CD"): #and not(list_match(nlp.tokenise((boundbox[0].boundtext).lower),["dr."]))) :   # Checks for NER number if any 
-#				addr=boundbox.boundtext[j]
+#			if word_match(nlp.pos_tag(boundbox[j].bound_text),"CD"): #and not(list_match(nlp.tokenise((boundbox[0].bound_text).lower),["dr."]))) :   # Checks for NER number if any 
+#				addr=boundbox.bound_text[j]
 #				j=j+1
 
 
@@ -123,8 +126,8 @@ def core(rows,cols,boundbox): # The main function of this file
 	
 	while(j<i) : #To find doctors name and specialistion
 
-		if list_match(nlp.tokenise(boundbox[j].boundtext),["Dr.","Dr"]):
-			list1=nlp.ner(boundbox[j].boundtext)
+		if list_match(nlp.tokenise(boundbox[j].bound_text),["Dr.","Dr"]):
+			list1=nlp.ner(boundbox[j].bound_text)
 			k=0			
 			for a in list1 :
 				if a[1]=="PERSON" :
@@ -147,8 +150,8 @@ def core(rows,cols,boundbox): # The main function of this file
 				y=5*bounding_box[k].bl.y-4*bounding_box[k].tl.y
 
 				if  boundbox[k].tl.x<x and x>boundbox[k].tr.x and boundbox[j].tl.y>y :
-					if list_match(nlp.tokenise(boundbox[j].boundtext.lower),qual_list) :
-						qual=boundbox[j].boundtext
+					if list_match(nlp.tokenise(boundbox[j].bound_text.lower),qual_list) :
+						qual=boundbox[j].bound_text
 					else:
 						break				
 				else:
@@ -167,10 +170,10 @@ def core(rows,cols,boundbox): # The main function of this file
 	if( not len(phone_no)) :
 		while i<len(boundbox):
 
-			list1=nlp.pos_tag(boundbox[i].boundtext)
+			list1=nlp.pos_tag(boundbox[i].bound_text)
 
 			if word_match(list1,"CD") :             #more than one phone no.
-				list1=nlp.ner(boundbox[i].boundtext)
+				list1=nlp.ner(boundbox[i].bound_text)
 				k=word_match (list1,"NUMBER")
 			
 				if k>0:

@@ -17,6 +17,7 @@ from spellcheck import parse_name as pn
 from utilities.digicon_classes import coordinate, boundingBox, image_location
 from vision_api import google_vision, azure_vision
 from spellcheck import lexigram, spellcheck_azure, spellcheck_custom
+import CoreNLP as cnlp
 
 def preprocess(input_image):
     """
@@ -394,6 +395,12 @@ def finish_pipeline(images_path, temp_path, image_name):
     with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'rb') as pkl_input:
         ocr_data = pickle.load(pkl_input)
     final_json = {}
+
+    # Call CoreNLP
+    # image_path = os.path.join(input_image.images_path, input_image.image_name)
+    # image_object = cv2.imread(image_path)
+    # corenlp_result = call_CoreNLP(image_object, ocr_data)
+    # print(corenlp_result)
 
     # Create PDF
     pdf_path, fresh_pdf_path = img_to_pdf(input_image)

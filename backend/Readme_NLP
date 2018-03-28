@@ -4,7 +4,7 @@ Installing process for CoreNLP:
 
 2. Install Stanford CoreNLP : (Paste URL : http://nlp.stanford.edu/software/stanford-corenlp-full-2018-02-27.zip ).
 
-3. Unzip the file and get terminal to the directory
+3. Unzip the file into backend/corenlp/
 
 4. Pip install stanfordcorenlp
 
