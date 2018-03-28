@@ -2,6 +2,9 @@ import argparse
 import numpy as np
 import cv2
 
+
+#run this file as: python3 rotate.py --image /image_directory/image_name
+
 def rotate_a_rightup_image(image):
     # construct the argument parse and parse the arguments
     ap = argparse.ArgumentParser()
@@ -41,7 +44,11 @@ def rotate_a_rightup_image(image):
         cv2.imshow("Rotated", rotated)
         cv2.waitKey(0)
 
+<<<<<<< Updated upstream
 def rotated_a_leftup_image(image):
+=======
+def rotate_a_leftup_image(image):
+>>>>>>> Stashed changes
 
     # construct the argument parse and parse the arguments
     ap = argparse.ArgumentParser()
