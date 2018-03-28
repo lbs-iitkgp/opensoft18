@@ -20,7 +20,8 @@ RUN mkdir /backend
 COPY . /backend
 
 WORKDIR /backend
-RUN pip3 install -r requirements.txt \
+RUN sudo -H pip3 install --upgrade pip \
+&& sudo -H pip3 install -r requirements.txt \
 && apt-get clean
 
-CMD ["python3 app.py"]
+CMD ["python3","app.py"]
