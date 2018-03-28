@@ -12,4 +12,5 @@ flask-cors
 google.cloud
 google-cloud-vision
 python-dotenv
+stanfordcorenlp
 
