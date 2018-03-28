@@ -44,12 +44,7 @@ def rotate_a_rightup_image(image):
         cv2.imshow("Rotated", rotated)
         cv2.waitKey(0)
 
-<<<<<<< Updated upstream
-def rotated_a_leftup_image(image):
-=======
 def rotate_a_leftup_image(image):
->>>>>>> Stashed changes
-
     # construct the argument parse and parse the arguments
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--image", required=True, help="path to input image file")
