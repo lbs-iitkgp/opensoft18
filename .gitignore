@@ -17,5 +17,5 @@ yarn-error.log
 # Env settings
 .env
 
-# CoreNLP folder
-corenlp
+# CoreNLP file
+stanford-corenlp-full-2018-02-27*

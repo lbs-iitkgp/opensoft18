@@ -21,7 +21,7 @@ def word_match(l1,w) : #Function to check for 2d lists have the word 'w' as an e
 def core(rows,cols,boundbox): # The main function of this file
 	# Replace this addres by the place where you unzip the file of NLP installation
 	nlp = StanfordCoreNLP(
-		os.path.join(os.path.dirname(os.path.realpath(__file__)), "corenlp", "stanford-corenlp-full-2018-02-27"))
+		os.path.join(os.path.dirname(os.path.realpath(__file__)), "stanford-corenlp-full-2018-02-27"))
 
 	#y axis assumed vertical/height and x- axis is horizontal/width
 

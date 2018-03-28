@@ -18,7 +18,7 @@ from utilities.ner import render_ner
 from utilities.digicon_classes import coordinate, boundingBox, image_location
 from vision_api import google_vision, azure_vision
 from spellcheck import lexigram, spellcheck_azure, spellcheck_custom
-import CoreNLP2 as cnlp
+import corenlp.CoreNLP2 as cnlp
 
 def preprocess(input_image):
     """
@@ -327,10 +327,10 @@ def fix_orientation(image_path, bounding_boxes):
         rotated_object = cv2.rotate(image_object, cv2.ROTATE_180)
         cv2.imwrite(image_path, rotated_object)
 
-def call_CoreNLP(in_img,bounding_boxes) :
+def call_CoreNLP(in_img, bounding_boxes) :
     # This calls core function to get name of hospital, address, doctors name ,specialisation
-    height, width, _ = in_img.shape
-    return cnlp.core(height,width,bounding_boxes) #Output as a list - refer Readme_nlp
+    height, _, _ = in_img.shape
+    return cnlp.core(height, bounding_boxes) #Output as a list - refer Readme_nlp
 
 def get_all_text(bounding_boxes):
     return bounding_boxes[0].bound_text
@@ -419,7 +419,7 @@ def finish_pipeline(images_path, temp_path, image_name):
         ocr_data = pickle.load(pkl_input)
     final_json = {}
 
-    # Call CoreNLP
+    # # Call CoreNLP
     # image_path = os.path.join(input_image.images_path, input_image.image_name)
     # image_object = cv2.imread(image_path)
     # corenlp_result = call_CoreNLP(image_object, ocr_data)
