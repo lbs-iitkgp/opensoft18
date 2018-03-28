@@ -241,8 +241,12 @@ def put_text_alt(cv_object, bbox_list):
 
     for bbox in bbox_list:
         if bbox.box_type == 'W':
-            font = get_font(bbox, os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), "fonts", "Noto_Sans", "NotoSans-Regular.ttf"))
+            if bbox.language == 'bn':
+                font = get_font(bbox, os.path.join(
+                    os.path.dirname(os.path.realpath(__file__)), "fonts", "Hind_Siliguri", "HindSiliguri-Regular.ttf"))
+            else:
+                font = get_font(bbox, os.path.join(
+                    os.path.dirname(os.path.realpath(__file__)), "fonts", "Noto_Sans", "NotoSans-Regular.ttf"))
             draw_rotated_text(
                 image_object,
                 fresh_image_object,
@@ -349,8 +353,8 @@ def continue_pipeline(images_path, temp_path, image_name):
         ocr_data = pickle.load(pkl_input)
 
     # Fix all spellings
-    ocr_data = fix_spelling(ocr_data)
-    ocr_data = fix_bound_text(ocr_data)
+    # ocr_data = fix_spelling(ocr_data)
+    # ocr_data = fix_bound_text(ocr_data)
 
     # Get lexigram data
     lexigram_json = get_lexigram(ocr_data[0], ocr_data)

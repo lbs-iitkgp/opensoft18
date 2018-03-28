@@ -19,6 +19,8 @@ class boundingBox:
     bb_children = []
     lexi_type = ''
     lexi_label = ''
+    dosage = {}
+    language = 'en'
 
     def __init__(self, tl, tr, bl, br, bound_text, box_type, bb_chilren):
 
@@ -43,6 +45,7 @@ class boundingBox:
         self.lexi_type = ''
         self.lexi_label = ''
         self.dosage = {}
+        self.language = 'en'
 
     def __repr__(self):  # object definition
         return "<boundingBox box_type:%s bound_text:%s tl:(%s,%s) tr:(%s,%s) bl:(%s,%s) br:(%s,%s)>" % (self.box_type,
