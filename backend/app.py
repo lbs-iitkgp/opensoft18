@@ -100,6 +100,13 @@ def api_continue(image_id):
         lexigram_data=lexigram_json,
         dosage_data=dosage_json
     )
+    
+    time.sleep(2)
+    socketio.emit('statusChange','2 secs done')
+
+    time.sleep(2)
+    socketio.emit('statusChange','4 secs done')
+
     # except Exception as e:
     #     print(e)
     #     app.logger.info(e)
@@ -110,6 +117,13 @@ def api_finish(image_id):
     app.logger.info(PROJECT_HOME)
     # try:
     final_json = finish_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id)
+
+    time.sleep(2)
+    socketio.emit('statusChange','6 secs done')
+
+    time.sleep(2)
+    socketio.emit('statusChange','8 secs done')
+
     return jsonify()
     # except Exception as e:
     #     app.logger.info(e)
