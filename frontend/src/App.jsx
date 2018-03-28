@@ -3,6 +3,7 @@ import axios from 'axios';
 import Dropzone from 'react-dropzone';
 // import Samples from './components/samples';
 import Lexigram from './components/lexigram';
+import Dosage from './components/dosage';
 import './styles/App.css';
 import './styles/buttons.css';
 import './styles/dropzone.css';
@@ -17,6 +18,7 @@ class App extends Component {
       image_name: '',
       canDownload: false,
       lexigramData: null,
+      dosageData: null,
       isFresh: false,
     };
 
@@ -56,6 +58,7 @@ class App extends Component {
         this.setState({
           outputObjects: [...this.state.outputObjects, data.replaced_image, data.fresh_image],
           lexigramData: data.lexigram_data,
+          dosageData: data.dosage_data,
           isFresh: false,
         });
         return axios({
@@ -104,6 +107,7 @@ class App extends Component {
       image_name: '',
       canDownload: false,
       lexigramData: null,
+      dosageData: null,
       isFresh: false,
     });
   }
@@ -116,6 +120,7 @@ class App extends Component {
 
   render() {
     const { lexigramData } = this.state;
+    const { dosageData } = this.state;
     return (
       <div className="App">
         <div className="App-welcome">
@@ -252,15 +257,28 @@ class App extends Component {
               </div>
             }
             <div className="row">
-              <div className="col-xs-6 lexigram-table">
+              <div className="col-xs-12 col-md-6 lexigram-table">
                 {
                   lexigramData &&
-                  <div>
+                  <div className="lexigram-div">
                     <div className="lexigram-title">
                       Medical knowledge
                     </div>
                     <Lexigram
                       lexigramData={lexigramData}
+                    />
+                  </div>
+                }
+              </div>
+              <div className="col-xs-12 col-md-6 dosage-table">
+                {
+                  dosageData &&
+                  <div className="dosage-div">
+                    <div className="dosage-title">
+                      Prescribed dosage information
+                    </div>
+                    <Dosage
+                      dosageData={dosageData}
                     />
                   </div>
                 }

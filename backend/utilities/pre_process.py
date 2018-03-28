@@ -299,7 +299,7 @@ def notescan_main(input_image):
     """
     input_filename = os.path.join(input_image.images_path, input_image.image_name)
     img, dpi = load(input_filename)
-    output_filename = os.path.join(input_image.temp_path, input_image.image_name)
+    output_filename = os.path.join(input_image.images_path, input_image.image_name)
 
     samples = sample_pixels(img)
     palette = get_palette(samples)

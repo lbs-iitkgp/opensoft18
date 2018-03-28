@@ -4,7 +4,7 @@ import os
 from os.path import join, dirname
 import requests
 import dotenv
-import spellcheck.parse_name as pn
+# import spellcheck.parse_name as pn
 
 dotenv.load_dotenv(join(dirname(__file__), '.env'))
 LEXIGRAM_ENDPOINT = 'https://api.lexigram.io/v1/extract/entities'

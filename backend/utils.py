@@ -13,7 +13,7 @@ from PIL import ImageFont, ImageDraw, Image
 
 import utilities.pre_process as pp
 
-from spellcheck import parse_name as pn
+# from spellcheck import parse_name as pn
 from utilities.digicon_classes import coordinate, boundingBox, image_location
 from vision_api import google_vision, azure_vision
 from spellcheck import lexigram, spellcheck_azure, spellcheck_custom
@@ -24,8 +24,8 @@ def preprocess(input_image):
     pre-processes the image and converts to gray-scale
     :param input_image: path to the image to be processed
     """
-    pp.whiteboard(input_image)
-    # pp.notescan_main(input_image)
+    # pp.whiteboard(input_image)
+    pp.notescan_main(input_image)
 
 def get_names(in_str):
     """
@@ -58,11 +58,18 @@ def drugdose_detect(bb_object, finding, all_boxes):
                     full_text = bbox.bound_text
                     drug, dosage = full_text.split(finding['token'], 1)
                     bb_object.dosage = {
-                        'drug': finding['label'],
-                        'dosage': dosage
+                        'drug': ''.join(e for e in finding['label'] if (e.isalnum() or e == ' ')),
+                        'dosage': ''.join(e for e in dosage if (e.isalnum() or e == ' '))
                     }
 
-def get_lexigram(bounding_box, all_boxes):
+def get_dosage(all_boxes):
+    dosage_json = {}
+    for bbox in all_boxes:
+        if bbox.box_type == 'W' and bbox.lexi_type == 'DRUGS':
+            dosage_json[bbox.dosage['drug']] = bbox.dosage['dosage']
+    return dosage_json
+
+def get_lexigram(all_boxes):
     """
     Extracts all possible metadata from all the bounding boxes
     :param bounding_box: a bounding box with bound_text
@@ -71,6 +78,7 @@ def get_lexigram(bounding_box, all_boxes):
     # The possible types detected by lexigraph are:
     # findings, problems, drugs, devices, anatomy
     # lexigram_json = {}
+    bounding_box = all_boxes[0]
     print(bounding_box.bound_text)
     individual_json = lexigram.extract_metadata_json(bounding_box.bound_text)
     # for key in individual_json:
@@ -140,7 +148,7 @@ def remove_text(input_image, bb_object):
         # crop = cv2.inpaint(crop, crop, 3, cv2.INPAINT_TELEA)
         input_image[y1:y2, x1:x2] = crop
 
-def draw_box(in_img, l_boxes, l_type='W'):
+def draw_box(in_img, l_boxes, l_type='L'):
     """
     draw red bounding boxes for line ('W') box_types
     :param in_img: input image in opencv format
@@ -161,7 +169,7 @@ def draw_box(in_img, l_boxes, l_type='W'):
 def get_lexi_color(lexi_type):
     # The possible types detected by lexigraph are:
     # findings, problems, drugs, devices, anatomy
-    font_color = (0, 0, 0)
+    font_color = (255, 0, 0)
     if lexi_type == 'FINDINGS':
         font_color = (0, 153, 0)
     elif lexi_type == 'PROBLEMS':
@@ -326,8 +334,13 @@ def call_CoreNLP(in_img,bounding_boxes) :
 def add_to_pipeline(images_path, temp_path, image_name):
     print(image_name)
     input_image = image_location(images_path, temp_path, image_name)
+    input_path = os.path.join(input_image.images_path, input_image.image_name)
+    image_object = cv2.imread(input_path)
     # Pre-processing
-    # preprocess(input_image)
+    try:
+        preprocess(input_image)
+    except:
+        cv2.imwrite(input_path, image_object)
     preprocessed_image = input_image
 
     # Get OCR data
@@ -358,7 +371,10 @@ def continue_pipeline(images_path, temp_path, image_name):
     # ocr_data = fix_bound_text(ocr_data)
 
     # Get lexigram data
-    lexigram_json = get_lexigram(ocr_data[0], ocr_data)
+    lexigram_json = get_lexigram(ocr_data)
+
+    # Get dosages
+    dosage_json = get_dosage(ocr_data)
 
     # Create image object to return
     replaced_image_object = cv2.imread(
@@ -366,7 +382,10 @@ def continue_pipeline(images_path, temp_path, image_name):
 
     # Remove original text from image
     for bbox in ocr_data:
-        remove_text(replaced_image_object, bbox)
+        try:
+            remove_text(replaced_image_object, bbox)
+        except:
+            pass
 
     ### Put font text back on image (using OpenCV)
     # for bbox in ocr_data:
@@ -388,7 +407,7 @@ def continue_pipeline(images_path, temp_path, image_name):
     cv2.imwrite(fresh_image, fresh_image_object)
     fix_orientation(replaced_image, ocr_data)
     fix_orientation(fresh_image, ocr_data)
-    return replaced_image, fresh_image, lexigram_json
+    return replaced_image, fresh_image, lexigram_json, dosage_json
 
 def finish_pipeline(images_path, temp_path, image_name):
     input_image = image_location(images_path, temp_path, image_name)
