@@ -1,4 +1,3 @@
-import os
 from stanfordcorenlp import StanfordCoreNLP
 
 def list_match(l1,l2) : #Function to check whether lists have any element in common
@@ -18,9 +17,8 @@ def word_match(l1,w) : #Function to check for 2d lists have the word 'w' as an e
 
 
 
-def core(rows,cols,boundbox): # The main function of this file
-	nlp = StanfordCoreNLP(
-		os.path.join(os.path.dirname(os.path.realpath(__file__)), "corenlp", "stanford-corenlp-full-2018-02-27"))
+def core(rows,boundbox): # The main function of this file
+	nlp = StanfordCoreNLP(r'/home/ayushk4/CoreNLP/stanford-corenlp-full-2018-02-27') # Replace this addres by the place where you unzip the file of NLP installation
 
 	#y axis assumed vertical/height and x- axis is horizontal/width
 
@@ -35,10 +33,11 @@ def core(rows,cols,boundbox): # The main function of this file
 	email_id='' #email_id
 
 	lis=["hospital","clinic","center","centre","diagnostic","diagnostics"] #usually this is what name of hospital has, check spellings and add more if any
+	#boundbox = []
+
 	
-	text=' '
-	while bound in boundbox : #all the text of all boundboxes in one text variable string
-		text=text + ' ' + bound
+	#while bound in boundbox : #all the text of all boundboxes in one text variable string
+	#	text=text + ' ' + bound
 	
 
 	lis1=nlp.ner(text)
@@ -51,19 +50,17 @@ def core(rows,cols,boundbox): # The main function of this file
 		if(element[1]=="EMAIL") :
 			email_id=email_id + ' ' + element[0]
 
-	i=0
+	i=1
 
 
 	while boundbox[i].tl.y<0.3*rows: # we will check in the top 30% of paper only
-
-		i=i+1
-
-
+		if(boundbox[i].box_type=='l') :
+			i=i+1
 
 
 
 	
-	lis1=nlp.tokenise(boundbox[0].boundtext) #tokenise is a basic function seperates string into words/indivisual characters/symbols
+	lis1=nlp.tokenise(boundbox[1].boundtext) #tokenise is a basic function seperates string into words/indivisual characters/symbols
 
 
 
@@ -71,8 +68,9 @@ def core(rows,cols,boundbox): # The main function of this file
 
 	if list_match(lis1,lis) : # and (not(substring_match(boundbox[0].boundtext,"dr."))):    # checks for the hospital name
 		hosp=bounding_box[j].boundtext
-		
-		
+
+
+
 		k=word_match(nlp.ner(boundbox[j].boundtext),"LOCATION")
 		lis1=nlp.pos(boundbox[j].boundtext)
 		if k>0 :
@@ -94,12 +92,14 @@ def core(rows,cols,boundbox): # The main function of this file
 		#next line onwards finds address of hospital if any
 		# to geometrically find if addres is directly below or not
 
-
+		while boundbox[j].box_type!='l' :
+			j=j+1
+		
 		x=(boundbox[j].tl.x+boundbox[j].tr.x)/2 #setting limits of location of bounding box
-		y=3*bounding_box[0].bl.y-2*bounding_box[0].tl.y #setting limits of location of bounding box
+		y=3*bounding_box[1].bl.y-2*bounding_box[1].tl.y #setting limits of location of bounding box
 
 
-		if  boundbox[0].tl.x<x and x>boundbox[0].tr.x and boundbox[j].tl.y>y :
+		if  boundbox[1].tl.x<x and x>boundbox[1].tr.x and boundbox[j].tl.y>y :
 
 
 			k=word_match(nlp.ner(boundbox[j].boundtext),"LOCATION")
@@ -131,6 +131,10 @@ def core(rows,cols,boundbox): # The main function of this file
 	
 	while(j<i) : #To find doctors name and specialistion
 
+		while boundbox[j].box_type!='l' :
+			j=j+1
+
+
 		if list_match(nlp.tokenise(boundbox[j].boundtext),["Dr.","Dr"]):
 			list1=nlp.ner(boundbox[j].boundtext)
 			k=0			
@@ -146,10 +150,21 @@ def core(rows,cols,boundbox): # The main function of this file
 
 			#next line onwards finds specialization if any
 
+
+			#if  boundbox[k].tl.x<x and x>boundbox[k].tr.x and boundbox[j].tl.y>y :
+			if list_match(nlp.tokenise(boundbox[j].boundtext.lower),qual_list) :
+				qual=boundbox[j].boundtext
+					
+										
+				#else:
+					
 			
 
 			while(j<i) :
 
+				while boundbox[j].box_type!='l' :
+					j=j+1
+				
 				# to geometrically find if specialization is directly below or not
 				x=(boundbox[j].tl.x+boundbox[j].tr.x)/2
 				y=5*bounding_box[k].bl.y-4*bounding_box[k].tl.y
@@ -167,11 +182,8 @@ def core(rows,cols,boundbox): # The main function of this file
 		j=j+1
 
 
-	while boundbox[i].tl.y<0.8*rows:
-		i=i+1
-
-
 	nlp.close()
+
 	output_list=[]
 	output_list.append(hosp)#hosp_name
 	output_list.append(doc) #doc_name
@@ -179,7 +191,12 @@ def core(rows,cols,boundbox): # The main function of this file
 	output_list.append(qual) #doc_qualification
 	output_list.append(phone_no) #contact_details
 	output_list.append(email_id) #email_id
+
+	print(output_list)
+
 	return output_list
+
+#core(842)
 
 #phone number ----done
 #location using person and noun phrase
