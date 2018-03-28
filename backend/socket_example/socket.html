@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Flask-SocketIO Test</title>
+    <script type="text/javascript" src="jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+       $(document).ready(function(){
+    var socket = io.connect('http://0.0.0.0:8080/test');
+    socket.on('success', function(msg) {
+        $('#log').append('<p>Received: ' + msg + '</p>');
+    });
+    socket.on('final', function(msg){
+      $('#log').append('<p>Final ka: ' + msg + '</p>');
+    });
+    $('form#emit').submit(function(event) {
+        socket.emit('sending');//, {data: $('#emit_data').val()});
+        return false;
+    });
+});
+    </script>
+</head>
+<body>
+    <h2>Send:</h2>
+    <form id="emit" method="POST" action='#'>
+        <input type="text" name="emit_data" id="emit_data" placeholder="Message">
+        <input type="submit" value="Echo">
+    </form>
+    <h2>Receive:</h2>
+    <div id="log"></div>
+</body>
+</html>

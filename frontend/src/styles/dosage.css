@@ -1,0 +1,12 @@
+.dosage-table {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+}
+
+.dosage-title {
+    font-size: 1.25rem;
+    padding-bottom: 30px;
+    color: #eb575d;
+}
