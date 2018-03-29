@@ -1,0 +1,8 @@
+curl -fsSL https://get.docker.com | sh
+mkdir -p /etc/systemd/system/docker.service.d
+touch /etc/systemd/system/docker.service.d/http-proxy.conf
+echo -e "[Service]\nEnvironment=\"HTTP_PROXY=http://172.16.2.30:port/\"" >> /etc/systemd/system/docker.service.d/http-proxy.conf
+systemctl daemon-reload
+systemctl restart docker
+apt install docker-compose
+docker-compose up
