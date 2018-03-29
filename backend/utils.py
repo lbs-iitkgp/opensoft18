@@ -149,6 +149,32 @@ def remove_text(input_image, bb_object):
         # crop = cv2.inpaint(crop, crop, 3, cv2.INPAINT_TELEA)
         input_image[y1:y2, x1:x2] = crop
 
+
+def rect_dim(point, img):
+    """
+    bounds the points to image size
+    :param point: list containing x and y value for a single coordinate
+    :param img: image on which the point is to be bound
+    :return point: bounded point if it is out of image, otherwise original
+    """
+    y_max, x_max, channel_count = img.shape
+
+    # checking x coordinate
+    if point[0] < 1:
+        point[0] = 1
+    elif point[0] > x_max:
+        point[0] = x_max - 1
+
+    # checking y coordinate
+    if point[1] < 1:
+        point[1] = 1
+    elif point[1] > y_max:
+        point[1] = y_max - 1
+
+    return point
+
+
+
 def draw_box(in_img, l_boxes, l_type='W'):
     """
     draw red bounding boxes for line ('W') box_types
@@ -159,8 +185,8 @@ def draw_box(in_img, l_boxes, l_type='W'):
     red = (0, 0, 255)  # opencv follows bgr pattern
     for box in l_boxes:
         if box.box_type == l_type:
-            vertices = np.array([[box.tl.x, box.tl.y], [box.tr.x, box.tr.y], [box.br.x, box.br.y],
-                                 [box.bl.x, box.bl.y]], np.int32)
+            vertices = np.array([rect_dim([box.tl.x, box.tl.y], in_img), rect_dim([box.tr.x, box.tr.y], in_img),
+                                 rect_dim([box.br.x, box.br.y], in_img), rect_dim([box.bl.x, box.bl.y], in_img)], np.int32)
             cv2.polylines(in_img, [vertices], True, red, thickness=1, lineType=cv2.LINE_AA)
     # uncomment below lines while debugging
     # cv2.imshow("debug", in_img)

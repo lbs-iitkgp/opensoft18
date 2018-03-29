@@ -18,9 +18,9 @@ from subprocess import call
 
 # in some installation of PIL, Image can be imported directly
 try:
-    import Image
+    import Image, ImageFile
 except ImportError:
-    from PIL import Image
+    from PIL import Image, ImageFile
 
 from scipy.cluster.vq import kmeans, vq
 
@@ -306,6 +306,7 @@ def notescan_main(input_image):
 
     labels = apply_palette(img, palette)
 
+    ImageFile.MAXBLOCK = max(ImageFile.MAXBLOCK, (4 * img.size [0] * img.size [1]) + 10)
     save(output_filename, labels, palette, dpi)
 
 

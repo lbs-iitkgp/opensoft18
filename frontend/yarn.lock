@@ -2168,10 +2168,6 @@ diffie-hellman@^5.0.0:
     miller-rabin "^4.0.0"
     randombytes "^2.0.0"
 
-displacy@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/displacy/-/displacy-1.0.4.tgz#0e620c6082b9dd7daea97c7d6c51df33b54167ff"
-
 dns-equal@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/dns-equal/-/dns-equal-1.0.0.tgz#b39e7f1da6eb0a75ba9c17324b34753c47e0654d"
