@@ -32,31 +32,15 @@ RUN apt-get update \
 	libatlas-base-dev \
 	gfortran \
 	webp \ 
-	python-opencv \ 
 	qt5-default \
 	libvtk6-dev \ 
 	zlib1g-dev \
-	&& apt-get clean \
-	build-essential \
-        cmake \
-        git \
-        wget \
-        unzip \
         yasm \
-        pkg-config \
         libswscale-dev \
         libtbb2 \
         libtbb-dev \
-        libjpeg-dev \
-        libpng-dev \
-        libtiff-dev \
-        libjasper-dev \
         libavformat-dev \
         libpq-dev
-
-RUN pip3 install -r requirements.txt
-RUN pip3 install numpy
-RUN python3 -m spacy download en
 
 WORKDIR /
 ENV OPENCV_VERSION="3.4.1"
@@ -86,16 +70,15 @@ RUN wget https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.zip \
 && rm -r /opencv-${OPENCV_VERSION}
 
 
-# Create directory
+# Create backend directory
 RUN mkdir /backend
 COPY . /backend
 
-WORKDIR /backend
-RUN sudo -H pip3 install --upgrade pip \
-&& sudo -H pip3 install -r requirements.txt \
-&& apt-get clean \
-GOOGLE_APPLICATION_CREDENTIALS="/home/prashant01/Desktop/opensoft18/backend/opensoft-196212a7ecf7.json"
+RUN pip3 install -r "/backend/requirements.txt"
+RUN python3 -m spacy download en
 
-
+# setting environment variables
+ENV GOOGLE_APPLICATION_CREDENTIALS="/backend/.gcloud_key.json"
+ENV LEXIGRAM_KEY="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdSI6Imx4ZzphcGkiLCJzYyI6WyJrZzpyZWFkIiwiZXh0cmFjdGlvbjpyZWFkIl0sImFpIjoiYXBpOjcxMjIwZjAwLTkxMjAtMWZlMC0xYTJkLTk2MWJlOGNkM2Y2MSIsInVpIjoidXNlcjoxNWJlOGE5Yy0zZDAzLTJmNmMtZjkzMS04NjE5Yjk0YzhiOGMiLCJpYXQiOjE1MjIzMDk5MDd9.FxTChifr8ARvp55Xb8Gf1odMZKfrUPueEcmOGL0Fsn8"
 
 CMD ["python3","app.py"]
