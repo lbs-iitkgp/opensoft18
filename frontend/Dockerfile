@@ -1,8 +1,5 @@
 FROM ubuntu:16.04
 
-ENV http_proxy http://172.16.2.30:8080
-ENV https_proxy https://172.16.2.30:8080
-
 RUN apt-get update \
 && apt-get install -y \
    wget \
@@ -14,6 +11,7 @@ RUN apt-get update \
    python3-pip \
 && apt-get clean
 
+WORKDIR /
 RUN mkdir /frontend
 COPY . /frontend
 
@@ -27,13 +25,8 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - \
 && apt-get install yarn \
 && apt-get clean
 
-RUN yarn config set proxy http://172.16.2.30:8080 \
-&& yarn config set https-proxy http://172.16.2.30:8080
-
 WORKDIR /frontend
 
 RUN yarn 
-
-#RUN yarn start
 
 CMD ["yarn","start"]
