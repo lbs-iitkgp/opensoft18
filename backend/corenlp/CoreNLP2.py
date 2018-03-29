@@ -153,14 +153,14 @@ def core(rows,boundbox): # The main function of this file
 		if l>0 :
 			
 			i=l-2
-			while (lis1[i][0]!="NNP") and i>=0 :
+			while (lis1[i][0]!="NNP" or lis1[i][0]!="NN") and i>=0 :
 				addr=lis1[i][0] + addr
 				i=i-1
 			
 			addr =addr + ' ' + lis1[l-1][0]
 			i=l
 
-			while (lis1[i][0]!="NNP") and i<len(lis1) :
+			while (lis1[i][0]!="NNP" or lis1[i][0]!="NN") and i<len(lis1) :
 				addr= addr + lis1[i][0]
 				i=i+1
 		j=j+1
