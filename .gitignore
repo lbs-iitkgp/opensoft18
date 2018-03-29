@@ -18,4 +18,4 @@ yarn-error.log
 .env
 
 # CoreNLP file
-stanford-corenlp-full-2018-02-27*../frontend/Dockerfile (with_proxy)
+stanford-corenlp-full-2018-02-27*
