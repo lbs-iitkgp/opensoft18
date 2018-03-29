@@ -11,7 +11,7 @@ const Dosage = (props) => {
   Object.keys(dosageData).forEach(drug => (
     tableData.push({
       drug,
-      dosage: dosageData.drug,
+      dosage: dosageData[drug],
     })
   ));
 
@@ -39,7 +39,7 @@ const Dosage = (props) => {
 };
 
 Dosage.propTypes = {
-  dosageData: propTypes.objectOf(propTypes.array).isRequired,
+  dosageData: propTypes.objectOf(propTypes.string).isRequired,
 };
 
 export default Dosage;
