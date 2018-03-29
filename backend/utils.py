@@ -95,7 +95,7 @@ def get_lexigram(all_boxes):
                 if finding['token'] == w_box.bound_text:
                     w_box.lexi_type = finding_type
                     w_box.lexi_label = finding['label']
-                    if finding_type == 'DRUGS':
+                    if finding_type == 'DRUGS' and len(finding['token']) >= 3:
                         drugdose_detect(w_box, finding, all_boxes)
     # for w_box in bounding_box.bb_children:
     #     print(w_box.bound_text)

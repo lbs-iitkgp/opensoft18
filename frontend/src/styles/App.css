@@ -25,6 +25,12 @@
   padding: 10px;
 }
 
+.App-welcome .team-name {
+  color: #000;
+  font-family: 'Lato', sans-serif;
+  font-size: 4vh;
+}
+
 .App-welcome .welcome-bottom {
   background: #eb575d;
   height: 1vh;

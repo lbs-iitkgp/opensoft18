@@ -147,6 +147,9 @@ class App extends Component {
     return (
       <div className="App">
         <div className="App-welcome">
+          <div className="team-name">
+            Team 3
+          </div>
           <div className="welcome-text">
             DigiCon
             <div className="App-description">
