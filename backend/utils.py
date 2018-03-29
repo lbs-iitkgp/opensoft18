@@ -361,28 +361,34 @@ def call_CoreNLP(in_img, bounding_boxes) :
 def get_all_text(bounding_boxes):
     return bounding_boxes[0].bound_text
 
-def add_to_pipeline(images_path, temp_path, image_name):
+def add_to_pipeline(images_path, temp_path, image_name, sockethandler):
     print(image_name)
     input_image = image_location(images_path, temp_path, image_name)
     input_path = os.path.join(input_image.images_path, input_image.image_name)
     image_object = cv2.imread(input_path)
     # Pre-processing
+    sockethandler.emit('statusChange','Applying Pre-Processing')
     try:
         preprocess(input_image)
+        sockethandler.emit('statusChange','Pre-Processing Done')
     except:
         cv2.imwrite(input_path, image_object)
     preprocessed_image = input_image
 
     # Get OCR data
+    sockethandler.emit('statusChange','Querying Google Vision OCR')
     ocr_data = google_vision.get_google_ocr(input_image)
+    sockethandler.emit('statusChange','OCR Done')
     # ocr_data = azure_vision.get_azure_ocr(input_image)
     with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'wb') as pkl_output:
         pickle.dump(ocr_data, pkl_output, pickle.HIGHEST_PROTOCOL)
 
     # Draw bounding boxes around words
+    sockethandler.emit('statusChange','Drawing bouding boxes')
     bbl_image_object = cv2.imread(
         os.path.join(preprocessed_image.images_path, preprocessed_image.image_name))
     draw_box(bbl_image_object, ocr_data)
+    sockethandler.emit('statusChange','Bounding boxes done')
     # cv2.imshow('bbl_image_object', bbl_image_object)
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
@@ -391,7 +397,7 @@ def add_to_pipeline(images_path, temp_path, image_name):
     fix_orientation(bbl_image, ocr_data)
     return bbl_image, render_ner(get_all_text(ocr_data))
 
-def continue_pipeline(images_path, temp_path, image_name):
+def continue_pipeline(images_path, temp_path, image_name, sockethandler):
     input_image = image_location(images_path, temp_path, image_name)
     with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'rb') as pkl_input:
         ocr_data = pickle.load(pkl_input)
@@ -401,9 +407,11 @@ def continue_pipeline(images_path, temp_path, image_name):
     # ocr_data = fix_bound_text(ocr_data)
 
     # Get lexigram data
+    sockethandler.emit('statusChange','Applying Lexigram')
     lexigram_json = get_lexigram(ocr_data)
 
     # Get dosages
+    sockethandler.emit('statusChange','Getting dosage data')
     dosage_json = get_dosage(ocr_data)
 
     # Create image object to return
@@ -411,11 +419,13 @@ def continue_pipeline(images_path, temp_path, image_name):
         os.path.join(input_image.images_path, input_image.image_name))
 
     # Remove original text from image
+    sockethandler.emit('statusChange','Replacing detected text')
     for bbox in ocr_data:
         try:
             remove_text(replaced_image_object, bbox)
         except:
             pass
+    sockethandler.emit('statusChange','Done')
 
     ### Put font text back on image (using OpenCV)
     # for bbox in ocr_data:
@@ -439,7 +449,7 @@ def continue_pipeline(images_path, temp_path, image_name):
     fix_orientation(fresh_image, ocr_data)
     return replaced_image, fresh_image, lexigram_json, dosage_json
 
-def finish_pipeline(images_path, temp_path, image_name):
+def finish_pipeline(images_path, temp_path, image_name, sockethandler):
     input_image = image_location(images_path, temp_path, image_name)
     with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'rb') as pkl_input:
         ocr_data = pickle.load(pkl_input)

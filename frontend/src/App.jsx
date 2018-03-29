@@ -10,6 +10,8 @@ import './styles/buttons.css';
 import './styles/dropzone.css';
 import './styles/displacy.css';
 import './styles/flexboxgrid/flexboxgrid.min.css';
+import { subscribeToStatusChange } from './Socket';
+
 
 class App extends Component {
   constructor() {
@@ -23,7 +25,11 @@ class App extends Component {
       dosageData: null,
       isFresh: false,
       allText: null,
+      status: null,
     };
+    subscribeToStatusChange((err, newstatus) => this.setState({ 
+      status: newstatus, 
+    }));
 
     this.onDrop = this.onDrop.bind(this);
     this.resetImage = this.resetImage.bind(this);
@@ -36,6 +42,7 @@ class App extends Component {
     const uploaders = acceptedFiles.map((uploadedFile) => {
       this.setState({
         preview: uploadedFile.preview,
+        status: "Started",
       });
       const formData = new FormData();
       formData.append('image', uploadedFile);
@@ -186,6 +193,11 @@ class App extends Component {
               <div className="row previews">
                 <div className="original-preview col-xs-4">
                   <img src={this.state.preview} alt="Uploaded preview" />
+                  {
+                  this.state.status != null ? (
+                    <div>{this.state.status}</div>
+                  ) : ("")
+                  }
                 </div>
                 {
                   this.state.outputObjects[0] != null ? (
