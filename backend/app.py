@@ -70,7 +70,7 @@ def api_root():
         app.logger.info("saving {}".format(saved_path))
         img.save(saved_path)
         # return Response(stream_output(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], file_name))
-        bbox_image, all_text = add_to_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], file_name)
+        bbox_image, all_text = add_to_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], file_name, socketio)
         with open(bbox_image, "rb") as image_file:
             encoded_image = base64.b64encode(image_file.read())
         return jsonify(
@@ -88,7 +88,7 @@ def api_root():
 def api_continue(image_id):
     app.logger.info(PROJECT_HOME)
     # try:
-    replaced_image, fresh_image, lexigram_json, dosage_json = continue_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id)
+    replaced_image, fresh_image, lexigram_json, dosage_json = continue_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id, socketio)
     with open(replaced_image, "rb") as image_file:
         encoded_replaced_image = base64.b64encode(image_file.read())
     with open(fresh_image, "rb") as image_file:
@@ -99,14 +99,7 @@ def api_continue(image_id):
         image_name=image_id,
         lexigram_data=lexigram_json,
         dosage_data=dosage_json
-    )
-    
-    time.sleep(2)
-    socketio.emit('statusChange','2 secs done')
-
-    time.sleep(2)
-    socketio.emit('statusChange','4 secs done')
-
+    )    
     # except Exception as e:
     #     print(e)
     #     app.logger.info(e)
@@ -116,14 +109,7 @@ def api_continue(image_id):
 def api_finish(image_id):
     app.logger.info(PROJECT_HOME)
     # try:
-    final_json = finish_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id)
-
-    time.sleep(2)
-    socketio.emit('statusChange','6 secs done')
-
-    time.sleep(2)
-    socketio.emit('statusChange','8 secs done')
-
+    final_json = finish_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id, socketio)
     return jsonify()
     # except Exception as e:
     #     app.logger.info(e)

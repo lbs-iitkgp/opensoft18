@@ -42,6 +42,7 @@ class App extends Component {
     const uploaders = acceptedFiles.map((uploadedFile) => {
       this.setState({
         preview: uploadedFile.preview,
+        status: "Started",
       });
       const formData = new FormData();
       formData.append('image', uploadedFile);
@@ -194,7 +195,7 @@ class App extends Component {
                   <img src={this.state.preview} alt="Uploaded preview" />
                   {
                   this.state.status != null ? (
-                    <text>{this.state.status}</text>
+                    <div>{this.state.status}</div>
                   ) : ("")
                   }
                 </div>
@@ -202,20 +203,10 @@ class App extends Component {
                   this.state.outputObjects[0] != null ? (
                     <div className="bboxes-preview col-xs-4">
                       <img src={`data:image/jpeg;base64,${this.state.outputObjects[0]}`} alt="Bounding boxes preview" />
-                      {
-                      this.state.status != null ? (
-                        <text>{this.state.status}</text>
-                      ) : ("")
-                      }
                     </div>
                   ) : (
                     <div className="bboxes-preview col-xs-4">
                       <img src={this.state.preview} alt="Bounding boxes preview" />
-                      {
-                      this.state.status != null ? (
-                        <text>{this.state.status}</text>
-                      ) : ("")
-                      }
                     </div>
                   )
                 }
@@ -235,20 +226,10 @@ class App extends Component {
                           <img src={`data:image/jpeg;base64,${this.state.outputObjects[2]}`} alt="Bounding boxes preview" />
                         )
                       }
-                      {
-                      this.state.status != null ? (
-                        <text>{this.state.status}</text>
-                      ) : ("")
-                      }
                     </div>
                   ) : (
                     <div className="bboxes-preview col-xs-4">
                       <img src={this.state.preview} alt="Bounding boxes preview" />
-                      {
-                      this.state.status != null ? (
-                        <text>{this.state.status}</text>
-                      ) : ("")
-                      }
                     </div>
                   )
                 }
