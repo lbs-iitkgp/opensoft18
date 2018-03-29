@@ -32,6 +32,8 @@ RUN yarn config set proxy http://172.16.2.30:8080 \
 
 WORKDIR /frontend
 
-RUN yarn
+RUN yarn 
+
+#RUN yarn start
 
 CMD ["yarn","start"]
