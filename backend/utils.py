@@ -370,30 +370,28 @@ def add_to_pipeline(images_path, temp_path, image_name, sockethandler):
     sockethandler.emit('statusChange','Applying Pre-Processing')
     try:
         preprocess(input_image)
-        sockethandler.emit('statusChange','Pre-Processing Done')
     except:
         cv2.imwrite(input_path, image_object)
     preprocessed_image = input_image
 
     # Get OCR data
-    sockethandler.emit('statusChange','Querying Google Vision OCR')
+    sockethandler.emit('statusChange','Querying Google Vision API')
     ocr_data = google_vision.get_google_ocr(input_image)
-    sockethandler.emit('statusChange','OCR Done')
     # ocr_data = azure_vision.get_azure_ocr(input_image)
     with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'wb') as pkl_output:
         pickle.dump(ocr_data, pkl_output, pickle.HIGHEST_PROTOCOL)
 
     # Draw bounding boxes around words
-    sockethandler.emit('statusChange','Drawing bouding boxes')
+    sockethandler.emit('statusChange','Drawing bounding boxes')
     bbl_image_object = cv2.imread(
         os.path.join(preprocessed_image.images_path, preprocessed_image.image_name))
     draw_box(bbl_image_object, ocr_data)
-    sockethandler.emit('statusChange','Bounding boxes done')
     # cv2.imshow('bbl_image_object', bbl_image_object)
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
     bbl_image = os.path.join(input_image.temp_path, "bbl_" + input_image.image_name)
     cv2.imwrite(bbl_image, bbl_image_object)
+    sockethandler.emit('statusChange','Fixing orientation')
     fix_orientation(bbl_image, ocr_data)
     return bbl_image, render_ner(get_all_text(ocr_data))
 
@@ -407,7 +405,7 @@ def continue_pipeline(images_path, temp_path, image_name, sockethandler):
     # ocr_data = fix_bound_text(ocr_data)
 
     # Get lexigram data
-    sockethandler.emit('statusChange','Applying Lexigram')
+    sockethandler.emit('statusChange','Extracting medical metadata')
     lexigram_json = get_lexigram(ocr_data)
 
     # Get dosages
@@ -425,8 +423,6 @@ def continue_pipeline(images_path, temp_path, image_name, sockethandler):
             remove_text(replaced_image_object, bbox)
         except:
             pass
-    sockethandler.emit('statusChange','Done')
-
     ### Put font text back on image (using OpenCV)
     # for bbox in ocr_data:
     #     if bbox.box_type == 'W':
@@ -462,8 +458,10 @@ def finish_pipeline(images_path, temp_path, image_name, sockethandler):
     # print(corenlp_result)
 
     # Create PDF
+    sockethandler.emit('statusChange','Creating pdfs')
     pdf_path, fresh_pdf_path = img_to_pdf(input_image)
 
+    sockethandler.emit('statusChange','Complete')
     return final_json
 
 def do_download(images_path, temp_path, image_name, download_type):

@@ -77,3 +77,20 @@
   cursor: pointer;
   outline: none;
 }
+
+.status-message {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: bold;
+  background: #18192b;
+  border-radius: 30px;
+  border: 2px solid #3c3e63;
+}
+
+.message-text {
+  padding: 10px;
+}

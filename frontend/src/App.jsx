@@ -162,6 +162,13 @@ class App extends Component {
                 DigiCon
               </div>
               {
+                (this.state.status != null && this.state.status !== 'Complete') ? (
+                  <div className="status-message">
+                    <div className="message-text">{this.state.status}</div>
+                  </div>
+                ) : ''
+              }
+              {
                 this.state.preview &&
                 <div
                   className="new-image col-xs-6"
@@ -193,11 +200,6 @@ class App extends Component {
               <div className="row previews">
                 <div className="original-preview col-xs-4">
                   <img src={this.state.preview} alt="Uploaded preview" />
-                  {
-                  this.state.status != null ? (
-                    <div>{this.state.status}</div>
-                  ) : ("")
-                  }
                 </div>
                 {
                   this.state.outputObjects[0] != null ? (
