@@ -123,6 +123,7 @@ class App extends Component {
       dosageData: null,
       isFresh: false,
       allText: null,
+      status: null,
     });
   }
 
@@ -298,7 +299,7 @@ class App extends Component {
                 </div>
               </div>
             }
-            <div className="row">
+            <div className="row upper-tables">
               <div className="col-xs-12 col-md-6 lexigram-table">
                 {
                   lexigramData &&

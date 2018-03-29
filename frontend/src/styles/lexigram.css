@@ -1,8 +1,10 @@
+.lexitable .rt-thead {
+    font-weight: bold;
+    color: #e6e600;
+}
+
 .lexigram-table {
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    text-align: center;
+    align-self: flex-start;
 }
 
 .lexigram-title {

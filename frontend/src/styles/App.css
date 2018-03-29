@@ -100,3 +100,10 @@
 .message-text {
   padding: 10px;
 }
+
+.upper-tables {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}

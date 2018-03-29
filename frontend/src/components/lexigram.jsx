@@ -39,6 +39,7 @@ const Lexigram = (props) => {
         showPageSizeOptions={false}
         minRows={0}
         showPageJump={false}
+        className="lexitable"
       />
       {/* <table>
         <thead>

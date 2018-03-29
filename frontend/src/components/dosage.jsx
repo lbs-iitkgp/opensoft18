@@ -33,6 +33,7 @@ const Dosage = (props) => {
         showPageSizeOptions={false}
         minRows={0}
         showPageJump={false}
+        className="dosagetable"
       />
     </div>
   );

@@ -67,7 +67,10 @@ def get_dosage(all_boxes):
     dosage_json = {}
     for bbox in all_boxes:
         if bbox.box_type == 'W' and bbox.lexi_type == 'DRUGS':
-            dosage_json[bbox.dosage['drug']] = bbox.dosage['dosage']
+            try:
+                dosage_json[bbox.dosage['drug']] = bbox.dosage['dosage']
+            except KeyError:
+                pass
     return dosage_json
 
 def get_lexigram(all_boxes):
@@ -95,7 +98,7 @@ def get_lexigram(all_boxes):
                 if finding['token'] == w_box.bound_text:
                     w_box.lexi_type = finding_type
                     w_box.lexi_label = finding['label']
-                    if finding_type == 'DRUGS' and len(finding['token']) >= 3:
+                    if (finding_type == 'DRUGS' and len(finding['token']) >= 3):
                         drugdose_detect(w_box, finding, all_boxes)
     # for w_box in bounding_box.bb_children:
     #     print(w_box.bound_text)
