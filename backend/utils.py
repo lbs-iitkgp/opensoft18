@@ -125,12 +125,19 @@ def fix_spelling(bounding_box_list):
     :param bounding_box_list: a list of bounding boxes with bound_text
     :return: bounding_box_list: a list of bounding boxes with spell-fixed bound_text
     """
-    # text = spellcheck_azure.make_correction(text)
+    # print(len(bounding_box_list))
+    # for bbox in bounding_box_list:
+    #     if bbox.box_type == 'W':
+    #         print(bbox.bound_text)
 
-    for bbox in bounding_box_list:
-        if bbox.box_type == 'W':
-            text = spellcheck_custom.spellcor(bbox.bound_text)
-            bbox.bound_text = text
+    bounding_box_list = spellcheck_azure.merge_bounding_boxes(bounding_box_list)
+    print(bounding_box_list[0].bound_text)
+
+    # print(len(bounding_box_list))
+    # for bbox in bounding_box_list:
+    #     if bbox.box_type == 'W':
+    #         print(bbox.bound_text)
+    # exit(0)
     return bounding_box_list
 
 def crop_image(input_image, x1, x2, y1, y2):
@@ -404,7 +411,7 @@ def continue_pipeline(images_path, temp_path, image_name, sockethandler):
         ocr_data = pickle.load(pkl_input)
 
     # Fix all spellings
-    # ocr_data = fix_spelling(ocr_data)
+    ocr_data = fix_spelling(ocr_data)
     # ocr_data = fix_bound_text(ocr_data)
 
     # Get lexigram data

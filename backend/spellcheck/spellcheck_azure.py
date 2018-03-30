@@ -26,18 +26,17 @@ def make_correction(old_query):
     :param old_query: query string
     :return: new_query: string with corrections made
     """
-
+    print(old_query)
     response = spellcheck(old_query)['flaggedTokens']
+    print(response)
     response.reverse()
     new_query = old_query
-
     for token in response:
         left = token['offset']
         right = left + len(token['token'])
         suggestions = sorted(token['suggestions'], key=operator.itemgetter('score'), reverse=True)
         replacement = suggestions[0]['suggestion']
         new_query = new_query[:left] + replacement + new_query[right:]
-    print(new_query)
     return new_query
 
 def merge_bounding_boxes(bounding_boxes):
@@ -52,18 +51,31 @@ def merge_bounding_boxes(bounding_boxes):
     bounding_boxes[0].bound_text = new_all_text
 
     word_boxes = list(filter(lambda x: x.box_type == 'W', bounding_boxes))
-    left_counter = 0
+    i = 0
     while i < len(word_boxes)-1:
         this_box = word_boxes[i]
         next_box = word_boxes[i+1]
         this_word = this_box.bound_text
         next_word = next_box.bound_text
-        if new_all_text.find(this_word) == left_counter and new_all_text.find(next_word) == left_counter+len(this_word):
-            left_counter = left_counter + len(this_word)
+        # print(new_all_text)
+        # print(this_word, new_all_text.find(this_word))
+        # print(next_word, new_all_text.find(next_word))
+        if new_all_text.find(this_word) == -1:
+            # print("OWOWOW")
+            word_boxes[i].bound_text = new_all_text.split(' ')[0]
+            new_all_text = " ".join(new_all_text.split(' ')[1:])
+            i += 1
+        elif new_all_text.find(this_word) == 0 and new_all_text.find(next_word) == (len(this_word) + 1):
+            # print("EYEYEY")
+            new_all_text = new_all_text[len(this_word)+1:]
+            i += 1
+        elif new_all_text.find(next_word) == -1:
+            new_all_text = " ".join(new_all_text.split(' ')[1:])
             i += 1
         else:
             word_boxes[i] = this_box.merge(next_box)
             del word_boxes[i+1]
+        # input()
 
     new_bounding_boxes = [bounding_boxes[0]] + word_boxes
     sentence_boxes = list(filter(lambda x: x.box_type == 'L', bounding_boxes))
