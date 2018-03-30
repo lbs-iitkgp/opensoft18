@@ -28,7 +28,7 @@ def core(rows,boundbox): # The main function of this file
 
 	#y axis assumed vertical/height and x- axis is horizontal/width
 
-	qual_list=["allergist", "anaesthesiologist", "anasthesiologist", "anesthesiologist", "andrologist", "cardiologist", "consultant" "dermatologist", "dentist", "diabetologist", "dietician",  "electrophysiologist", "endocrinologists", "epidemiologist", "gastroenterologist", "geneticist", "geriatrician", "gynaecologist",  "gynecologist", "hematologist", "hepatologist", "immunologist", "intensivist", "neonatologist", "nephrologist", "neurologist", "neurosurgeon", "obstetrician", "onconlogist", "ophthalmologist", "orthopedist", "osteopaths", "otolaryngologists", "parasitologist", "pathologist", "pediatrician",  "perinatologist", "Periodontist", "physiatrists", "physician", "podiatrist", "psychiatrist", "psychologist", "pulmonologists", "radiologist", "specialist", "surgeon", "urologist", "veterinarian","andrology", "cardiology", "dentist", "electrophysiology", "endocrinology", "epidemiology", "gastroenterology", "geneticist", "geriatri", "gynaecology",  "gynecology", "hematology", "hepatology", "immunology", "neonatology", "nephrology", "neurology", "obstetri", "onconlogy", "ophthalmology", "otolaryngology", "parasitology", "pathology", "pediatri",  "perinatology", "physiatrist", "podiatri", "psychiatry", "psychology", "pulmonologists", "radiology", "urology","vetererinarian", "mbbs","fcps","f.c.p.s.", "m.b.b.s.", "bmbs", "m.d.", "md", "b.m.b.s.", "mbchb", "m.b.c.h.b.", "mbbch", "m.b.b.c.h.", "ms", "m.s."]# possible speciliazation, add if any
+	qual_list=["allergist", "anaesthesiologist", "anasthesiologist", "anesthesiologist", "andrologist", "cardiologist", "consultant" "dermatologist", "dentist", "diabetologist", "dietician",  "electrophysiologist", "endocrinologists", "ent", "epidemiologist", "gastroenterologist", "geneticist", "geriatrician", "gynaecologist",  "gynecologist", "hematologist", "hepatologist", "immunologist", "intensivist", "neonatologist", "nephrologist", "neurologist", "neurosurgeon", "obstetrician", "onconlogist", "ophthalmologist", "orthopedist", "osteopaths", "otolaryngologists", "parasitologist", "pathologist", "pediatrician",  "perinatologist", "Periodontist", "physiatrists", "physician", "podiatrist", "psychiatrist", "psychologist", "pulmonologists", "radiologist", "specialist", "surgeon", "urologist", "veterinarian","andrology", "cardiology", "dentist", "electrophysiology", "endocrinology", "epidemiology", "gastroenterology", "geneticist", "geriatri", "gynaecology",  "gynecology", "hematology", "hepatology", "immunology", "neonatology", "nephrology", "neurology", "obstetri", "onconlogy", "ophthalmology", "otolaryngology", "parasitology", "pathology", "pediatri",  "perinatology", "physiatrist", "podiatri", "psychiatry", "psychology", "pulmonologists", "radiology", "urology","vetererinarian", "mbbs","fcps","f.c.p.s.", "m.b.b.s.", "bmbs", "m.d.", "md", "b.m.b.s.", "mbchb", "m.b.c.h.b.", "mbbch", "m.b.b.c.h.", "ms", "m.s."]# possible speciliazation, add if any
 
 	i=1 #working variable
 	j=0 #working variable
@@ -47,7 +47,7 @@ def core(rows,boundbox): # The main function of this file
 
 	lis1=nlp.ner(text) #NER is a Named entity recognition function in the core nlp API
 
-	regex = r"\d{1,8}[-.\s]?\d{1,8}[-.\s]?\d{1,8}"
+	regex = r"\d{1,8}[\s]?[-.\s]?[\s]?\d{1,8}[\s]?[-.\s]?[\s]?\d{1,8}"
 	matches = re.finditer(regex, text)
 
 	for matchnum,match in enumerate(matches):
@@ -162,7 +162,7 @@ def core(rows,boundbox): # The main function of this file
 			while (lis1[i][0]!="NNP") and i>=0 :
 				addr=lis1[i][0] + addr
 				i=i-1
-			
+
 			addr =addr + ' ' + lis1[l-1][0]
 			i=l
 
