@@ -1,4 +1,4 @@
-Installing process for CoreNLP:
+Installing process for CoreNLP with python wrapper:
 
 1. Install Java 1.8+ (Check with command: java -version)
 
