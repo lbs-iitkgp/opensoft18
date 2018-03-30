@@ -58,6 +58,48 @@ class boundingBox:
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
+    def merge(self, another_box):
+        this_box = self
+        merged_box = boundingBox(
+            coordinate(min(this_box.tl.x, another_box.tl.x), min(this_box.tl.y, another_box.tl.y)),
+            coordinate(max(this_box.tr.x, another_box.tr.x), min(this_box.tr.y, another_box.tr.y)),
+            coordinate(min(this_box.bl.x, another_box.bl.x), max(this_box.bl.y, another_box.bl.y)),
+            coordinate(max(this_box.br.x, another_box.br.x), max(this_box.br.y, another_box.br.y)),
+            this_box.bound_text + ' ' + another_box.bound_text, 'W', []
+        )
+
+        return merged_box
+
+    def find_enclosed_text(self, small_boxes):
+        this_box = self
+        enclosed_text = ''
+
+        for small_box in small_boxes:
+            if small_box.is_enclosed_by(this_box):
+                enclosed_text = enclosed_text + small_box.bound_text + ' '
+
+        return enclosed_text
+
+    def find_enclosed_boxes(self, small_boxes):
+        this_box = self
+        enclosed_boxes = []
+
+        for small_box in small_boxes:
+            if small_box.is_enclosed_by(this_box):
+                enclosed_boxes.append(small_box)
+
+        return enclosed_boxes
+
+    def is_enclosed_by(self, bigger_box):
+        this_box = self
+
+        tl_violation = this_box.tl.x < bigger_box.tl.x or this_box.tl.y < bigger_box.tl.y
+        tr_violation = this_box.tr.x > bigger_box.tr.x or this_box.tr.y < bigger_box.tr.y
+        bl_violation = this_box.bl.x < bigger_box.bl.x or this_box.bl.y > bigger_box.bl.y
+        br_violation = this_box.br.x > bigger_box.br.x or this_box.br.y > bigger_box.br.y
+
+        return not (tl_violation or tr_violation or bl_violation or br_violation)
+
 class image_location:
     images_path = ''
     temp_path = ''

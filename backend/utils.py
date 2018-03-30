@@ -125,12 +125,20 @@ def fix_spelling(bounding_box_list):
     :param bounding_box_list: a list of bounding boxes with bound_text
     :return: bounding_box_list: a list of bounding boxes with spell-fixed bound_text
     """
-    # text = spellcheck_azure.make_correction(text)
+    # print(len(bounding_box_list))
+    # for bbox in bounding_box_list:
+    #     if bbox.box_type == 'W':
+    #         print(bbox.bound_text)
 
-    for bbox in bounding_box_list:
-        if bbox.box_type == 'W':
-            text = spellcheck_custom.spellcor(bbox.bound_text)
-            bbox.bound_text = text
+    bounding_box_list = spellcheck_azure.merge_bounding_boxes(bounding_box_list)
+    print(bounding_box_list[0].bound_text)
+    # exit(0)
+
+    # print(len(bounding_box_list))
+    # for bbox in bounding_box_list:
+    #     if bbox.box_type == 'W':
+    #         print(bbox.bound_text)
+    # exit(0)
     return bounding_box_list
 
 def crop_image(input_image, x1, x2, y1, y2):
@@ -146,9 +154,9 @@ def remove_text(input_image, bb_object):
         y2 = max(bb_object.tl.y, bb_object.tr.y, bb_object.bl.y, bb_object.br.y)
         # print(x1,x2,y1,y2)
         crop = crop_image(img, x1, x2, y1, y2)
-        kernel = np.ones((5,5), np.uint8)
+        kernel = np.ones((8,8), np.uint8)
         # crop = cv2.erode(crop, kernel, iterations=5)
-        crop = cv2.dilate(crop, kernel, iterations=60)
+        crop = cv2.dilate(crop, kernel, iterations=2)
         # crop = cv2.inpaint(crop, crop, 3, cv2.INPAINT_TELEA)
         input_image[y1:y2, x1:x2] = crop
 
@@ -242,7 +250,7 @@ def draw_rotated_text(image, fresh_image, angle, xy, text, fill, *args, **kwargs
         #     mask_size, resample=Image.LANCZOS)
         bigger_mask = mask.resize((max_dim*8, max_dim*8))
         rotated_mask = bigger_mask.rotate(angle).resize(
-            mask_size, resample=Image.BICUBIC)
+            mask_size)
 
     # crop the mask to match image
     mask_xy = (max_dim - xy[0], max_dim - xy[1])
@@ -263,10 +271,12 @@ def get_font(bbox, font_path):
     font = ImageFont.truetype(font_path, fontsize)
     while (font.getsize(bbox.bound_text)[0] < bbox_fraction*bbox_width
         and font.getsize(bbox.bound_text)[1] < bbox_fraction*bbox_height):
+        if fontsize == 50:
+            break
         fontsize += 1
         font = ImageFont.truetype(font_path, fontsize)
     fontsize -= 1
-    fontsize = max(fontsize, 12)
+    fontsize = max(fontsize, 15)
     font = ImageFont.truetype(font_path, fontsize)
     return font
 
@@ -289,8 +299,8 @@ def put_text_alt(cv_object, bbox_list):
             else:
                 font = get_font(bbox, os.path.join(
                     os.path.dirname(os.path.realpath(__file__)), "fonts", "Noto_Sans", "NotoSans-Regular.ttf"))
-            # print("WRITING!!!!")
-            # start_time = time.time()
+            print("WRITING!!!!")
+            start_time = time.time()
             draw_rotated_text(
                 image_object,
                 fresh_image_object,
@@ -301,10 +311,10 @@ def put_text_alt(cv_object, bbox_list):
                 get_lexi_color(bbox.lexi_type),
                 font=font
             )
-            # taken_time = time.time() - start_time
-            # minutes, seconds = taken_time // 60, taken_time % 60
-            # print(minutes, seconds)
-            # print("DONE!!!!")
+            taken_time = time.time() - start_time
+            minutes, seconds = taken_time // 60, taken_time % 60
+            print(minutes, seconds)
+            print("DONE!!!!")
     image_object = image_object.convert('RGB')
     cv_object = np.array(image_object)
     cv_object = cv_object[:, :, ::-1].copy()
@@ -390,6 +400,9 @@ def add_to_pipeline(images_path, temp_path, image_name, sockethandler):
     sockethandler.emit('statusChange','Running OCR')
     ocr_data = google_vision.get_google_ocr(input_image)
     # ocr_data = azure_vision.get_azure_ocr(input_image)
+
+    ocr_data = fix_spelling(ocr_data)
+
     with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'wb') as pkl_output:
         pickle.dump(ocr_data, pkl_output, pickle.HIGHEST_PROTOCOL)
 
@@ -440,12 +453,13 @@ def continue_pipeline(images_path, temp_path, image_name, sockethandler):
     #     if bbox.box_type == 'W':
     #         put_text(replaced_image_object, bbox)
     ### Put font text back on image (using PIL)
-    # print("WRITING!!!!")
+    print("WRITING!!!!")
     # start_time = time.time()
     replaced_image_object, fresh_image_object = put_text_alt(replaced_image_object, ocr_data)
     # taken_time = time.time() - start_time
     # minutes, seconds = taken_time // 60, taken_time % 60
     # print(minutes, seconds)
+    print("OKKKK")
 
     # cv2.imshow('replaced_image_object', replaced_image_object)
     # cv2.waitKey(0)
