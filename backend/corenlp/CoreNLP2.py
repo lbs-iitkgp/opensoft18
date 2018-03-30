@@ -38,7 +38,7 @@ def find_date(m1) : #To identify as a string following date format or not
 
 
 def core(rows,boundbox): # The main function of this file
-	# Replace this addres by the place where you unzip the file of NLP installation
+	# Replace this address by the place where you unzip the file of NLP installation
 	nlp = StanfordCoreNLP(
 		os.path.join(os.path.dirname(os.path.realpath(__file__)), "stanford-corenlp-full-2018-02-27"))
 
@@ -68,13 +68,14 @@ def core(rows,boundbox): # The main function of this file
 		#if(element[1]=="NUMBER") :
 		#	if(len(element[0])>8) : #length of phone no.>=7
 		#		phone_no=phone_no + '' + element[0]
-
+		#NER would be used although not as robust as Regex, if in case Regex does not work on certain language scripts 
+		
 		if(element[1]=="EMAIL") :
 			email_id=email_id + ' ' + element[0]
 
 	i=1	
 
-	while boundbox[i].box_type=='W': #To check doctors qualification/specialization
+	while boundbox[i].box_type=='W': #To check doctor's qualification/specialization
 		k= word_match_2(qual_list,(boundbox[i].bound_text.lower())) 
 		if k>0 and boundbox[i].tl.y<0.3*rows:
 			qual=qual + ' ' + qual_list[k-1]
@@ -114,7 +115,7 @@ def core(rows,boundbox): # The main function of this file
 	while k<i:
 		#to find doctors name 
 		if list_match(nlp.word_tokenize(boundbox[k].bound_text.lower()),["dr.","dr"]):
-				#tokenise is a basic function seperates string into words/indivisual characters/symbols
+				#tokenise is a basic function seperates string into words/individual characters/symbols
 
 			lis1=nlp.ner(boundbox[k].bound_text)
 			l=0
@@ -147,7 +148,7 @@ def core(rows,boundbox): # The main function of this file
 	k=j
 	l=1
 
-	while k <i: #For detecting hospital name and location
+	while k <i: #For detecting hospital's / clinic's name and location
 		if (list_match (( nlp.word_tokenize ( boundbox[k].bound_text.lower())),lis)) :
 			lis1=nlp.pos_tag(boundbox[k].bound_text)
 			l=0
@@ -195,7 +196,7 @@ def core(rows,boundbox): # The main function of this file
 	output_list.append(hosp)#hosp_name
 	output_list.append(doc) #doc_name
 	output_list.append(addr) #hosp_addr
-	output_list.append(qual) #doc_qualification
+	output_list.append(qual) #doc_qualification_or_specialization
 	output_list.append(phone_no) #contact_details
 	output_list.append(email_id) #email_id
 	output_list.append(date) #date
