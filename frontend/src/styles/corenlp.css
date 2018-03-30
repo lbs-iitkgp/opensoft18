@@ -1,0 +1,14 @@
+.nlptable .rt-thead {
+    font-weight: bold;
+    color: #e6e600;
+}
+
+.nlp-table {
+    align-self: flex-start;
+}
+
+.nlp-title {
+    font-size: 1.25rem;
+    padding-bottom: 30px;
+    color: #eb575d;
+}

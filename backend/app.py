@@ -10,7 +10,7 @@ import logging, os
 import requests
 from flask_socketio import SocketIO, emit
 
-from utils import add_to_pipeline, continue_pipeline, finish_pipeline, do_download
+from utils import add_to_pipeline, continue_pipeline, finish_pipeline, do_download, do_nlp
 
 app = Flask(__name__)
 CORS(app)
@@ -110,7 +110,22 @@ def api_finish(image_id):
     app.logger.info(PROJECT_HOME)
     # try:
     final_json = finish_pipeline(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id, socketio)
-    return jsonify()
+    return jsonify(
+        image_name=image_id
+    )
+    # except Exception as e:
+    #     app.logger.info(e)
+    #     return ("Error occured:- "+str(e), 400, {})
+
+@app.route('/donlp/<string:image_id>', methods = ['GET'])
+def donlp(image_id):
+    app.logger.info(PROJECT_HOME)
+    # try:
+    nlp_result = do_nlp(app.config['UPLOAD_FOLDER'], app.config['TEMP_FOLDER'], image_id, socketio)
+    return jsonify(
+        image_name=image_id,
+        nlp_result=nlp_result
+    )
     # except Exception as e:
     #     app.logger.info(e)
     #     return ("Error occured:- "+str(e), 400, {})

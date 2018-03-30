@@ -5,6 +5,7 @@ import DisplacyEnt from './js/displacy-ent';
 // import Samples from './components/samples';
 import Lexigram from './components/lexigram';
 import Dosage from './components/dosage';
+import Corenlp from './components/corenlp';
 import './styles/App.css';
 import './styles/buttons.css';
 import './styles/dropzone.css';
@@ -26,9 +27,11 @@ class App extends Component {
       isFresh: false,
       allText: null,
       status: null,
+      nlpData: null,
     };
-    subscribeToStatusChange((err, newstatus) => this.setState({ 
-      status: newstatus, 
+
+    subscribeToStatusChange((err, newstatus) => this.setState({
+      status: newstatus,
     }));
 
     this.onDrop = this.onDrop.bind(this);
@@ -42,7 +45,7 @@ class App extends Component {
     const uploaders = acceptedFiles.map((uploadedFile) => {
       this.setState({
         preview: uploadedFile.preview,
-        status: "Started",
+        status: 'Started',
       });
       const formData = new FormData();
       formData.append('image', uploadedFile);
@@ -84,6 +87,10 @@ class App extends Component {
         this.setState({
           canDownload: true,
         });
+        return axios({
+          method: 'get',
+          url: `http://localhost:8080/donlp/${data.image_name}`,
+        });
       });
     });
 
@@ -124,6 +131,7 @@ class App extends Component {
       isFresh: false,
       allText: null,
       status: null,
+      nlpData: null,
     });
   }
 
@@ -145,6 +153,7 @@ class App extends Component {
   render() {
     const { lexigramData } = this.state;
     const { dosageData } = this.state;
+    const { nlpData } = this.state;
     return (
       <div className="App">
         <div className="App-welcome">
@@ -322,6 +331,21 @@ class App extends Component {
                     </div>
                     <Dosage
                       dosageData={dosageData}
+                    />
+                  </div>
+                }
+              </div>
+            </div>
+            <div className="row">
+              <div className="col-xs-12 nlp-table">
+                {
+                  nlpData &&
+                  <div className="nlp-div">
+                    <div className="nlp-title">
+                      Key entities detected
+                    </div>
+                    <Corenlp
+                      nlpData={nlpData}
                     />
                   </div>
                 }
