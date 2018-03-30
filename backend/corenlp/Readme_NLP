@@ -8,8 +8,6 @@ Installing process for CoreNLP:
 
 4. Pip install stanfordcorenlp
 
-5. For the PS, on line 21 of the corenlp.py file edit the address with the complete address of installation folder.
- 	add statement nlp.close() to the same file at end because it consumes a lot of memory space
 
 
 
