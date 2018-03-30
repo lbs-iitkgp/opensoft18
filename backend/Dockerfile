@@ -14,12 +14,20 @@ python3-pip \
 pkg-config \
 python-dev
 
+RUN apt-get install -y default-jre \
+default-jdk
+
 # Create backend directory
 RUN mkdir /backend
 COPY . /backend
 
 RUN pip3 install -r "/backend/requirements.txt"
 RUN pip3 install "/backend/en_core_web_sm-2.0.0.tar.gz"
+
+WORKDIR /backend/corenlp
+RUN wget http://nlp.stanford.edu/software/stanford-corenlp-full-2018-02-27.zip
+RUN unzip stanford-corenlp-full-2018-02-27.zip
+RUN pip3 install stanfordcorenlp
 
 # setting environment variables
 ENV GOOGLE_APPLICATION_CREDENTIALS="/backend/.gcloud_key.json"
