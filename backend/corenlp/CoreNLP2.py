@@ -1,5 +1,6 @@
 import os
 from stanfordcorenlp import StanfordCoreNLP
+import re
 
 def list_match(l1,l2) : #Function to check whether lists have any element in common
 	for a in l1:
@@ -27,7 +28,7 @@ def core(rows,boundbox): # The main function of this file
 
 	#y axis assumed vertical/height and x- axis is horizontal/width
 
-	qual_list=["allergist", "anaesthesiologist", "anasthesiologist", "anesthesiologist", "andrologist", "cardiologist", "consultant" "dermatologist", "dentist", "diabetologist", "dietician",  "electrophysiologist", "endocrinologists", "epidemiologist", "gastroenterologist", "geneticist", "geriatrician", "gynaecologist",  "gynecologist", "hematologist", "hepatologist", "immunologist", "intensivist", "neonatologist", "nephrologist", "neurologist", "neurosurgeon", "obstetrician", "onconlogist", "ophthalmologist", "orthopedist", "osteopaths", "otolaryngologists", "parasitologist", "pathologist", "pediatrician",  "perinatologist", "Periodontist", "physiatrists", "physician", "podiatrist", "psychiatrist", "psychologist", "pulmonologists", "radiologist", "specialist", "surgeon", "urologist", "veterinarian", "mbbs", "m.b.b.s.", "bmbs", "m.d.", "md", "b.m.b.s.", "mbchb", "m.b.c.h.b.", "mbbch", "m.b.b.c.h.", "ms", "m.s."]# possible speciliazation, add if any
+	qual_list=["allergist", "anaesthesiologist", "anasthesiologist", "anesthesiologist", "andrologist", "cardiologist", "consultant" "dermatologist", "dentist", "diabetologist", "dietician",  "electrophysiologist", "endocrinologists", "epidemiologist", "gastroenterologist", "geneticist", "geriatrician", "gynaecologist",  "gynecologist", "hematologist", "hepatologist", "immunologist", "intensivist", "neonatologist", "nephrologist", "neurologist", "neurosurgeon", "obstetrician", "onconlogist", "ophthalmologist", "orthopedist", "osteopaths", "otolaryngologists", "parasitologist", "pathologist", "pediatrician",  "perinatologist", "Periodontist", "physiatrists", "physician", "podiatrist", "psychiatrist", "psychologist", "pulmonologists", "radiologist", "specialist", "surgeon", "urologist", "veterinarian","andrology", "cardiology", "dentist", "electrophysiology", "endocrinology", "epidemiology", "gastroenterology", "geneticist", "geriatri", "gynaecology",  "gynecology", "hematology", "hepatology", "immunology", "neonatology", "nephrology", "neurology", "obstetri", "onconlogy", "ophthalmology", "otolaryngology", "parasitology", "pathology", "pediatri",  "perinatology", "physiatrist", "podiatri", "psychiatry", "psychology", "pulmonologists", "radiology", "urology","vetererinarian", "mbbs","fcps","f.c.p.s.", "m.b.b.s.", "bmbs", "m.d.", "md", "b.m.b.s.", "mbchb", "m.b.c.h.b.", "mbbch", "m.b.b.c.h.", "ms", "m.s."]# possible speciliazation, add if any
 
 	i=1 #working variable
 	j=0 #working variable
@@ -39,15 +40,22 @@ def core(rows,boundbox): # The main function of this file
 	email_id='' #email_id
 
 	lis=["hospital","clinic","center","centre","diagnostic","diagnostics"] #usually this is what name of hospital has, check spellings and add more if any
-	
+
 
 	text = boundbox[0].bound_text
-	
+
 
 	lis1=nlp.ner(text) #NER is a Named entity recognition function in the core nlp API
 
+	regex = r"\d{1,8}[-.\s]?\d{1,8}[-.\s]?\d{1,8}"
+	matches = re.finditer(regex, text)
 
-	#print(lis1)
+	for matchnum,match in enumerate(matches):
+		if len(str(match.group()))>7:
+			phone_no= str(phone_no)+ "," + str(match.group())
+
+
+	#print(phone_no)
 	
 	element=lis1[0]
 	
@@ -55,7 +63,7 @@ def core(rows,boundbox): # The main function of this file
 	for element in lis1 : # for phone number and email
 		if(element[1]=="NUMBER") :
 			if(len(element[0])>8) : #length of phone no.>=7
-				phone_no=phone_no + ' ' + element[0]
+				phone_no=phone_no + '' + element[0]
 
 		if(element[1]=="EMAIL") :
 			email_id=email_id + ' ' + element[0]
@@ -77,7 +85,7 @@ def core(rows,boundbox): # The main function of this file
 	l=1
 	while k<i:
 		#to find doctors name 
-		
+
 		if list_match(nlp.word_tokenize(boundbox[k].bound_text.lower()),["dr.","dr"]):
 				#tokenise is a basic function seperates string into words/indivisual characters/symbols
 
@@ -93,12 +101,11 @@ def core(rows,boundbox): # The main function of this file
 				elif l==1 :
 					break 
 
-						
 
 			lis1=nlp.pos_tag(boundbox[k].bound_text)
 			l=0
 
-				
+
 			a=lis1[0]
 			for a in lis1 :
 				if a[1]=="NNP" :
@@ -107,7 +114,7 @@ def core(rows,boundbox): # The main function of this file
 
 				elif l==1 :
 					break 
-						
+			
 
 			break
 		k=k+1
@@ -120,8 +127,8 @@ def core(rows,boundbox): # The main function of this file
 	while k <i:
 		if (list_match (( nlp.word_tokenize ( boundbox[k].bound_text.lower())),lis)) :
 			lis1=nlp.pos_tag(boundbox[k].bound_text)
-						
-			
+
+
 			l=0
 			a=lis1[0]
 			for a in lis1 :	
@@ -130,8 +137,7 @@ def core(rows,boundbox): # The main function of this file
 					l=1
 				elif l==1 :
 					break;
-				
-			
+
 			break;
 		k=k+1
 
@@ -153,14 +159,14 @@ def core(rows,boundbox): # The main function of this file
 		if l>0 :
 			
 			i=l-2
-			while (lis1[i][0]!="NNP" or lis1[i][0]!="NN") and i>=0 :
+			while (lis1[i][0]!="NNP") and i>=0 :
 				addr=lis1[i][0] + addr
 				i=i-1
 			
 			addr =addr + ' ' + lis1[l-1][0]
 			i=l
 
-			while (lis1[i][0]!="NNP" or lis1[i][0]!="NN") and i<len(lis1) :
+			while (lis1[i][0]!="NNP") and i<len(lis1) :
 				addr= addr + lis1[i][0]
 				i=i+1
 		j=j+1
