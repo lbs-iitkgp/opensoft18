@@ -21,6 +21,22 @@ def word_match_2(l1,w) : #Function to check for 1d lists
 			return l1.index(a) +1
 	return 0
 
+def find_date(m1) :
+	
+	regex = r"\d{2}?[\s]?[\\\/-][\s]?\d{2}[\s]?[-\\\/][\s]?\d{2,4}"
+
+	matches = re.finditer(regex, m1)
+	num=0
+	for matchnum, match in enumerate(matches):
+		x=(match.group())
+
+		for i in range (0,len(x)):
+			if (x[i].isdigit())==True:
+				num=num+1
+
+	return num
+
+
 def core(rows,boundbox): # The main function of this file
 	# Replace this addres by the place where you unzip the file of NLP installation
 	nlp = StanfordCoreNLP(
@@ -28,7 +44,7 @@ def core(rows,boundbox): # The main function of this file
 
 	#y axis assumed vertical/height and x- axis is horizontal/width
 
-	qual_list=["allergist", "anaesthesiologist", "anasthesiologist", "anesthesiologist", "andrologist", "cardiologist", "consultant" "dermatologist", "dentist", "diabetologist", "dietician",  "electrophysiologist", "endocrinologists", "ent", "epidemiologist", "gastroenterologist", "geneticist", "geriatrician", "gynaecologist",  "gynecologist", "hematologist", "hepatologist", "immunologist", "intensivist", "neonatologist", "nephrologist", "neurologist", "neurosurgeon", "obstetrician", "onconlogist", "ophthalmologist", "orthopedist", "osteopaths", "otolaryngologists", "parasitologist", "pathologist", "pediatrician",  "perinatologist", "Periodontist", "physiatrists", "physician", "podiatrist", "psychiatrist", "psychologist", "pulmonologists", "radiologist", "specialist", "surgeon", "urologist", "veterinarian","andrology", "cardiology", "dentist", "electrophysiology", "endocrinology", "epidemiology", "gastroenterology", "geneticist", "geriatri", "gynaecology",  "gynecology", "hematology", "hepatology", "immunology", "neonatology", "nephrology", "neurology", "obstetri", "onconlogy", "ophthalmology", "otolaryngology", "parasitology", "pathology", "pediatri",  "perinatology", "physiatrist", "podiatri", "psychiatry", "psychology", "pulmonologists", "radiology", "urology","vetererinarian", "mbbs","fcps","f.c.p.s.", "m.b.b.s.", "bmbs", "m.d.", "md", "b.m.b.s.", "mbchb", "m.b.c.h.b.", "mbbch", "m.b.b.c.h.", "ms", "m.s."]# possible speciliazation, add if any
+	qual_list=["allergist", "anaesthesiologist", "anasthesiologist", "anesthesiologist", "andrologist", "cardiologist", "consultant" "dermatologist", "dentist", "diabetologist", "dietician",  "electrophysiologist", "endocrinologists", "ent", "epidemiologist", "gastroenterologist", "geneticist", "geriatrician", "gynaecologist",  "gynecologist", "hematologist", "hepatologist", "immunologist", "intensivist", "neonatologist", "nephrologist", "neurologist", "neurosurgeon", "obstetrician", "onconlogist", "ophthalmologist", "orthopedist", "osteopaths", "otolaryngologists", "parasitologist", "pathologist", "pediatrician",  "perinatologist", "Periodontist", "physiatrists", "physician", "podiatrist", "psychiatrist", "psychologist", "pulmonologists", "radiologist", "specialist", "surgeon", "urologist", "veterinarian","andrology", "cardiology", "dentist", "electrophysiology", "endocrinology", "epidemiology", "gastroenterology", "geneticist", "geriatri", "gynaecology",  "gynecology", "hematology", "hepatology", "immunology", "neonatology", "nephrology", "neurology", "obstetri", "onconlogy", "ophthalmology", "otolaryngology", "parasitology", "pathology", "pediatri",  "perinatology", "physiatrist", "podiatri", "psychiatry", "psychology", "pulmonologists", "radiology", "urology","vetererinarian", "mbbs","m . b . b . s .","fcps", "f . c . p . s .","f.c.p.s.", "m.b.b.s.", "m . b . b . s .","bmbs", "m.d.", "md","m . d .", "b.m.b.s.","b . m . b . s ." "mbchb", "m.b.c.h.b.", "m . b . c . h . b ." "mbbch", "m.b.b.c.h.", "m . b . b . c . h ." "ms", "m.s.","m . s ."]# possible speciliazation, add if any
 
 	i=1 #working variable
 	j=0 #working variable
@@ -38,48 +54,60 @@ def core(rows,boundbox): # The main function of this file
 	qual='' #doc_qualification		
 	phone_no='' #phone_no
 	email_id='' #email_id
+	date='' #date
 
-	lis=["hospital","clinic","center","centre","diagnostic","diagnostics"] #usually this is what name of hospital has, check spellings and add more if any
+	lis=["hospital","clinic","center","centre","diagnostic","diagnostics","medical"] #usually this is what name of hospital has, check spellings and add more if any
 
 
 	text = boundbox[0].bound_text
-
-
+	print (text)
 	lis1=nlp.ner(text) #NER is a Named entity recognition function in the core nlp API
-
-	regex = r"\d{1,8}[\s]?[-.\s]?[\s]?\d{1,8}[\s]?[-.\s]?[\s]?\d{1,8}"
-	matches = re.finditer(regex, text)
-
-	for matchnum,match in enumerate(matches):
-		if len(str(match.group()))>7:
-			phone_no= str(phone_no)+ "," + str(match.group())
-
-
-	#print(phone_no)
-	
 	element=lis1[0]
-	
+	print(lis1)
 
 	for element in lis1 : # for phone number and email
-		if(element[1]=="NUMBER") :
-			if(len(element[0])>8) : #length of phone no.>=7
-				phone_no=phone_no + '' + element[0]
+		#if(element[1]=="NUMBER") :
+		#	if(len(element[0])>8) : #length of phone no.>=7
+		#		phone_no=phone_no + '' + element[0]
 
 		if(element[1]=="EMAIL") :
 			email_id=email_id + ' ' + element[0]
-			
+
 	i=1	
 
 	while boundbox[i].box_type=='W': #To check doctors qualification/specialization
 		k= word_match_2(qual_list,(boundbox[i].bound_text.lower())) 
-		if k>0:
-			qual=qual + ' ' + qual_list[k-1]					
+		if k>0 and boundbox[i].tl.y<0.3*rows:
+			qual=qual + ' ' + qual_list[k-1]
 		i=i+1
 
 	j=i
 
+	text=''
+
 	while boundbox[i].tl.y<0.3*rows: # we will check in the top 30% of paper only
+		text=text +boundbox[i].bound_text
 		i=i+1
+
+
+	regex = r"[\(]?[\s]?[\)]??[\s]?\d{1,8}?[\s]?[\(]?[\s]?[\)]?[\s]?[-]?[.]?[\s]?\d{1,8}[\s]?[-.]?[\s]?\d{1,8}[\s]?[-]?[.]?[\s]?\d{1,8}"
+	matches = re.finditer(regex, text)
+
+	for matchnum,match in enumerate(matches):
+		if len(str(match.group()))>8 :
+			if (find_date(str(match.group()))) ==0 :
+				phone_no= str(phone_no)+ "," + str(match.group())
+			else :
+				date= str(date) + "," + str(match.group())
+
+	regex = r"\d{2}?[\s]?[\\\/-][\s]?\d{2}[\s]?[-\\\/][\s]?\d{2,4}"
+	matches2 = re.finditer(regex, text)
+	
+
+	for matchnum2, match2 in enumerate(matches2):
+		date= str(date) + "," + str(match2.group())
+	
+	print(text)
 
 	k=j
 	l=1
@@ -105,15 +133,15 @@ def core(rows,boundbox): # The main function of this file
 			lis1=nlp.pos_tag(boundbox[k].bound_text)
 			l=0
 
+			if(len(doc)==0):
+				a=lis1[0]
+				for a in lis1 :
+					if a[1]=="NNP" :
+						l=1 
+						doc=doc + ' ' + a[0]
 
-			a=lis1[0]
-			for a in lis1 :
-				if a[1]=="NNP" :
-					l=1 
-					doc=doc + ' ' + a[0]
-
-				elif l==1 :
-					break 
+					elif l==1 :
+						break 
 			
 
 			break
@@ -180,5 +208,6 @@ def core(rows,boundbox): # The main function of this file
 	output_list.append(qual) #doc_qualification
 	output_list.append(phone_no) #contact_details
 	output_list.append(email_id) #email_id
+	output_list.append(date) #date
 
 	return output_list
