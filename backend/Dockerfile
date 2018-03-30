@@ -19,7 +19,7 @@ RUN mkdir /backend
 COPY . /backend
 
 RUN pip3 install -r "/backend/requirements.txt"
-RUN python3 -m spacy download en
+RUN pip3 install "/backend/en_core_web_sm-2.0.0.tar.gz"
 
 # setting environment variables
 ENV GOOGLE_APPLICATION_CREDENTIALS="/backend/.gcloud_key.json"
