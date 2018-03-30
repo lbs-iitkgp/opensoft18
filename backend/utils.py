@@ -236,10 +236,13 @@ def draw_rotated_text(image, fresh_image, angle, xy, text, fill, *args, **kwargs
         rotated_mask = mask.rotate(angle)
     else:
         # rotate an an enlarged mask to minimize jaggies
-        bigger_mask = mask.resize((max_dim*8, max_dim*8),
-                                  resample=Image.BICUBIC)
+        # bigger_mask = mask.resize((max_dim*8, max_dim*8),
+        #                           resample=Image.BICUBIC)
+        # rotated_mask = bigger_mask.rotate(angle).resize(
+        #     mask_size, resample=Image.LANCZOS)
+        bigger_mask = mask.resize((max_dim*8, max_dim*8))
         rotated_mask = bigger_mask.rotate(angle).resize(
-            mask_size, resample=Image.LANCZOS)
+            mask_size, resample=Image.BICUBIC)
 
     # crop the mask to match image
     mask_xy = (max_dim - xy[0], max_dim - xy[1])
@@ -286,6 +289,8 @@ def put_text_alt(cv_object, bbox_list):
             else:
                 font = get_font(bbox, os.path.join(
                     os.path.dirname(os.path.realpath(__file__)), "fonts", "Noto_Sans", "NotoSans-Regular.ttf"))
+            # print("WRITING!!!!")
+            # start_time = time.time()
             draw_rotated_text(
                 image_object,
                 fresh_image_object,
@@ -296,6 +301,10 @@ def put_text_alt(cv_object, bbox_list):
                 get_lexi_color(bbox.lexi_type),
                 font=font
             )
+            # taken_time = time.time() - start_time
+            # minutes, seconds = taken_time // 60, taken_time % 60
+            # print(minutes, seconds)
+            # print("DONE!!!!")
     image_object = image_object.convert('RGB')
     cv_object = np.array(image_object)
     cv_object = cv_object[:, :, ::-1].copy()
@@ -431,7 +440,12 @@ def continue_pipeline(images_path, temp_path, image_name, sockethandler):
     #     if bbox.box_type == 'W':
     #         put_text(replaced_image_object, bbox)
     ### Put font text back on image (using PIL)
+    # print("WRITING!!!!")
+    # start_time = time.time()
     replaced_image_object, fresh_image_object = put_text_alt(replaced_image_object, ocr_data)
+    # taken_time = time.time() - start_time
+    # minutes, seconds = taken_time // 60, taken_time % 60
+    # print(minutes, seconds)
 
     # cv2.imshow('replaced_image_object', replaced_image_object)
     # cv2.waitKey(0)
@@ -440,12 +454,15 @@ def continue_pipeline(images_path, temp_path, image_name, sockethandler):
     with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'wb') as pkl_output:
         pickle.dump(ocr_data, pkl_output, pickle.HIGHEST_PROTOCOL)
 
+    # print("STARTING ================")
+    # start_time = time.time()
     replaced_image = os.path.join(input_image.temp_path, "replaced_" + input_image.image_name)
     cv2.imwrite(replaced_image, replaced_image_object)
     fresh_image = os.path.join(input_image.temp_path, "fresh_" + input_image.image_name)
     cv2.imwrite(fresh_image, fresh_image_object)
     fix_orientation(replaced_image, ocr_data)
     fix_orientation(fresh_image, ocr_data)
+    # print(time.time() - start_time)
     return replaced_image, fresh_image, lexigram_json, dosage_json
 
 def finish_pipeline(images_path, temp_path, image_name, sockethandler):
@@ -469,11 +486,13 @@ def do_nlp(images_path, temp_path, image_name, sockethandler):
     with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'rb') as pkl_input:
         ocr_data = pickle.load(pkl_input)
 
+    corenlp_result = []
+
     # Call CoreNLP
-    sockethandler.emit('statusChange','Running CoreNLP models')
-    image_path = os.path.join(input_image.images_path, input_image.image_name)
-    image_object = cv2.imread(image_path)
-    corenlp_result = call_CoreNLP(image_object, ocr_data)
+    # sockethandler.emit('statusChange','Running CoreNLP models')
+    # image_path = os.path.join(input_image.images_path, input_image.image_name)
+    # image_object = cv2.imread(image_path)
+    # corenlp_result = call_CoreNLP(image_object, ocr_data)
 
     return corenlp_result
 
