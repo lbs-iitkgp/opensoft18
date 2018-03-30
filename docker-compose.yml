@@ -1,5 +1,4 @@
 version: '2'
-
 services:
   backend:
     build: './backend'
@@ -7,7 +6,7 @@ services:
     build: './frontend'
     ports:
          - "3000:3000"
-	 - "8080:8080"
+         - "8080:8080"
   nginx:
     build: './nginx'
 
