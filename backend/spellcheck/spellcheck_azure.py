@@ -62,7 +62,7 @@ def merge_bounding_boxes(bounding_boxes):
             left_counter = left_counter + len(this_word)
             i += 1
         else:
-            word_boxes[i] = this_box.megre(next_box)
+            word_boxes[i] = this_box.merge(next_box)
             del word_boxes[i+1]
 
     new_bounding_boxes = [bounding_boxes[0]] + word_boxes

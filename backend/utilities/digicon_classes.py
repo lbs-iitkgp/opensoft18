@@ -58,7 +58,7 @@ class boundingBox:
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
-    def merge_coordinates(self, another_box):
+    def merge(self, another_box):
         this_box = self
         merged_box = boundingBox(
             coordinate(min(this_box.tl.x, another_box.tl.x), min(this_box.tl.y, another_box.tl.y)),
