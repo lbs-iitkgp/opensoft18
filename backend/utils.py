@@ -405,7 +405,7 @@ def add_to_pipeline(images_path, temp_path, image_name, sockethandler):
     preprocessed_image = input_image
 
     # Get OCR data
-    sockethandler.emit('statusChange','Querying Google Vision API')
+    sockethandler.emit('statusChange','Running OCR')
     ocr_data = google_vision.get_google_ocr(input_image)
     # ocr_data = azure_vision.get_azure_ocr(input_image)
 
@@ -511,10 +511,11 @@ def do_nlp(images_path, temp_path, image_name, sockethandler):
     corenlp_result = []
 
     # Call CoreNLP
-    # sockethandler.emit('statusChange','Running CoreNLP models')
-    # image_path = os.path.join(input_image.images_path, input_image.image_name)
-    # image_object = cv2.imread(image_path)
-    # corenlp_result = call_CoreNLP(image_object, ocr_data)
+    sockethandler.emit('statusChange','Running CoreNLP models')
+    image_path = os.path.join(input_image.images_path, input_image.image_name)
+    image_object = cv2.imread(image_path)
+    corenlp_result = call_CoreNLP(image_object, ocr_data)
+    sockethandler.emit('statusChange','Complete')
 
     return corenlp_result
 
