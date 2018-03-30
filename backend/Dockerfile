@@ -7,7 +7,7 @@ curl \
 git \
 unzip \
 cmake \
-build-essentials \
+build-essential \
 mesa-utils \
 apt-transport-https ca-certificates \
 python3-pip \
