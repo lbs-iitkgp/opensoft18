@@ -40,6 +40,39 @@ def make_correction(old_query):
     print(new_query)
     return new_query
 
+def merge_bounding_boxes(bounding_boxes):
+    """
+    Merges any bounding boxes, based on spellchecker's typo corrections
+    :param bounding_boxes: A list of bounding boxes
+    :return: new_bounding_boxes: Merged bounding boxes, with same 'A', 'W', 'L' encoding
+    """
+
+    old_all_text = bounding_boxes[0].bound_text
+    new_all_text = make_correction(old_all_text)
+    bounding_boxes[0].bound_text = new_all_text
+
+    word_boxes = list(filter(lambda x: x.box_type == 'W', bounding_boxes))
+    left_counter = 0
+    while i < len(word_boxes)-1:
+        this_box = word_boxes[i]
+        next_box = word_boxes[i+1]
+        this_word = this_box.bound_text
+        next_word = next_box.bound_text
+        if new_all_text.find(this_word) == left_counter and new_all_text.find(next_word) == left_counter+len(this_word):
+            left_counter = left_counter + len(this_word)
+            i += 1
+        else:
+            word_boxes[i] = this_box.megre(next_box)
+            del word_boxes[i+1]
+
+    new_bounding_boxes = [bounding_boxes[0]] + word_boxes
+    sentence_boxes = list(filter(lambda x: x.box_type == 'L', bounding_boxes))
+    for sentence_box in sentence_boxes:
+        sentence_box.bound_text = sentence_box.find_enclosed_text(word_boxes)
+        new_bounding_boxes.append(sentence_box)
+
+    return new_bounding_boxes
+
 if __name__ == "__main__":
     """
     1. Get key for spell check from https://azure.microsoft.com/en-in/try/cognitive-services
