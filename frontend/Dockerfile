@@ -28,5 +28,7 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - \
 WORKDIR /frontend
 
 RUN yarn 
+RUN yarn global add serve
+RUN yarn build
 
-CMD ["yarn","start"]
+CMD ["serve", "-s", "build"]
