@@ -450,8 +450,6 @@ def continue_pipeline(images_path, temp_path, image_name, sockethandler):
 
 def finish_pipeline(images_path, temp_path, image_name, sockethandler):
     input_image = image_location(images_path, temp_path, image_name)
-    with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'rb') as pkl_input:
-        ocr_data = pickle.load(pkl_input)
     final_json = {}
 
     # # Call CoreNLP
@@ -464,8 +462,20 @@ def finish_pipeline(images_path, temp_path, image_name, sockethandler):
     sockethandler.emit('statusChange','Creating pdfs')
     pdf_path, fresh_pdf_path = img_to_pdf(input_image)
 
-    sockethandler.emit('statusChange','Complete')
     return final_json
+
+def do_nlp(images_path, temp_path, image_name, sockethandler):
+    input_image = image_location(images_path, temp_path, image_name)
+    with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'rb') as pkl_input:
+        ocr_data = pickle.load(pkl_input)
+
+    # Call CoreNLP
+    sockethandler.emit('statusChange','Running CoreNLP models')
+    image_path = os.path.join(input_image.images_path, input_image.image_name)
+    image_object = cv2.imread(image_path)
+    corenlp_result = call_CoreNLP(image_object, ocr_data)
+
+    return corenlp_result
 
 def do_download(images_path, temp_path, image_name, download_type):
     input_image = image_location(images_path, temp_path, image_name)
