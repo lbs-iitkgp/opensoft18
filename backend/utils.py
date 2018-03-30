@@ -65,8 +65,8 @@ def drugdose_detect(bb_object, finding, all_boxes):
                         'drug': ''.join(e for e in finding['label'] if (e.isalnum() or e == ' ')),
                         'dosage': ''.join(e for e in dosage if (e.isalnum() or e == ' '))
                     }
-                    new_bbox.bb_children.delete(bb_child)
-                    new_all_bbox.append(bb_object)
+                    new_bbox.bb_children.remove(bb_child)
+                    new_all_boxes.append(bb_object)
                     new_bbox.bb_children.append(bb_object)
         new_all_boxes.append(new_bbox)
     return(new_all_boxes)
