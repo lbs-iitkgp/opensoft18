@@ -91,6 +91,12 @@ class App extends Component {
           method: 'get',
           url: `http://localhost:8080/donlp/${data.image_name}`,
         });
+      }).then((response) => {
+        const { data } = response;
+        console.log(data);
+        this.setState({
+          nlpData: data.nlp_result,
+        });
       });
     });
 
@@ -336,7 +342,7 @@ class App extends Component {
                 }
               </div>
             </div>
-            <div className="row">
+            <div className="row lower-tables">
               <div className="col-xs-12 nlp-table">
                 {
                   nlpData &&
