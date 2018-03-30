@@ -6,7 +6,7 @@ Installing process for CoreNLP:
 
 3. Unzip the file into backend/corenlp/
 
-4. Pip install stanfordcorenlp
+4. pip3 install stanfordcorenlp
 
 
 
