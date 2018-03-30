@@ -65,7 +65,7 @@ class boundingBox:
             coordinate(max(this_box.tr.x, another_box.tr.x), min(this_box.tr.y, another_box.tr.y)),
             coordinate(min(this_box.bl.x, another_box.bl.x), max(this_box.bl.y, another_box.bl.y)),
             coordinate(max(this_box.br.x, another_box.br.x), max(this_box.br.y, another_box.br.y)),
-            this_box.bound_text+another_box.bound_text, 'W', []
+            this_box.bound_text + ' ' + another_box.bound_text, 'W', []
         )
 
         return merged_box

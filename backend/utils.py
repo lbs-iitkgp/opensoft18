@@ -130,8 +130,9 @@ def fix_spelling(bounding_box_list):
     #     if bbox.box_type == 'W':
     #         print(bbox.bound_text)
 
-    # bounding_box_list = spellcheck_azure.merge_bounding_boxes(bounding_box_list)
+    bounding_box_list = spellcheck_azure.merge_bounding_boxes(bounding_box_list)
     print(bounding_box_list[0].bound_text)
+    # exit(0)
 
     # print(len(bounding_box_list))
     # for bbox in bounding_box_list:
@@ -270,6 +271,8 @@ def get_font(bbox, font_path):
     font = ImageFont.truetype(font_path, fontsize)
     while (font.getsize(bbox.bound_text)[0] < bbox_fraction*bbox_width
         and font.getsize(bbox.bound_text)[1] < bbox_fraction*bbox_height):
+        if fontsize == 50:
+            break
         fontsize += 1
         font = ImageFont.truetype(font_path, fontsize)
     fontsize -= 1
@@ -397,6 +400,9 @@ def add_to_pipeline(images_path, temp_path, image_name, sockethandler):
     sockethandler.emit('statusChange','Querying Google Vision API')
     ocr_data = google_vision.get_google_ocr(input_image)
     # ocr_data = azure_vision.get_azure_ocr(input_image)
+
+    ocr_data = fix_spelling(ocr_data)
+
     with open(os.path.join(input_image.images_path, input_image.image_id + '.pkl'), 'wb') as pkl_output:
         pickle.dump(ocr_data, pkl_output, pickle.HIGHEST_PROTOCOL)
 
@@ -420,7 +426,7 @@ def continue_pipeline(images_path, temp_path, image_name, sockethandler):
         ocr_data = pickle.load(pkl_input)
 
     # Fix all spellings
-    ocr_data = fix_spelling(ocr_data)
+    # ocr_data = fix_spelling(ocr_data)
     # ocr_data = fix_bound_text(ocr_data)
 
     # Get lexigram data

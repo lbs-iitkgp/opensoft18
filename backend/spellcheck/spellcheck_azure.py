@@ -57,24 +57,34 @@ def merge_bounding_boxes(bounding_boxes):
         next_box = word_boxes[i+1]
         this_word = this_box.bound_text
         next_word = next_box.bound_text
-        # print(new_all_text)
-        # print(this_word, new_all_text.find(this_word))
+        print(new_all_text)
+        # print(this_word, .find(this_word))
         # print(next_word, new_all_text.find(next_word))
-        if new_all_text.find(this_word) == -1:
-            # print("OWOWOW")
+        print(this_word, new_all_text.find(this_word)==0, new_all_text.find(next_word) == (len(this_word)))
+        if new_all_text.find(this_word) != 0:
+            # print("OWOWnew_all_textOW")
             word_boxes[i].bound_text = new_all_text.split(' ')[0]
             new_all_text = " ".join(new_all_text.split(' ')[1:])
             i += 1
-        elif new_all_text.find(this_word) == 0 and new_all_text.find(next_word) == (len(this_word) + 1):
+        elif new_all_text.find(this_word) == 0 and new_all_text.find(next_word) == (len(this_word)+1) and next_word[0].islower():
             # print("EYEYEY")
+            # new_all_text = new_all_text[len(this_word)+1:]
+            # print(word_boxes[i])
+            # print(word_boxes[i+1])
+            word_boxes[i] = this_box.merge(next_box)
+            # print(word_boxes[i])
+            # print(word_boxes[i+1])
+            del word_boxes[i+1]
+        else:
             new_all_text = new_all_text[len(this_word)+1:]
             i += 1
-        elif new_all_text.find(next_word) == -1:
-            new_all_text = " ".join(new_all_text.split(' ')[1:])
-            i += 1
-        else:
-            word_boxes[i] = this_box.merge(next_box)
-            del word_boxes[i+1]
+        # else:
+        #     print(word_boxes[i])
+        #     print(word_boxes[i+1])
+        #     word_boxes[i] = this_box.merge(next_box)
+        #     print(word_boxes[i])
+        #     print(word_boxes[i+1])
+        #     del word_boxes[i+1]
         # input()
 
     new_bounding_boxes = [bounding_boxes[0]] + word_boxes
