@@ -4,3 +4,7 @@ body {
   padding: 0;
   font-family: 'Lato', sans-serif;
 }
+
+.white-banner {
+  filter: brightness(0) invert(1);
+}

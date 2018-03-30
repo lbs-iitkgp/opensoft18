@@ -12,7 +12,7 @@ import './styles/dropzone.css';
 import './styles/displacy.css';
 import './styles/flexboxgrid/flexboxgrid.min.css';
 import { subscribeToStatusChange } from './Socket';
-
+import banner from './banner.png';
 
 class App extends Component {
   constructor() {
@@ -167,7 +167,7 @@ class App extends Component {
             Team 3
           </div>
           <div className="welcome-text">
-            DigiCon
+            <img src={banner} alt="DigiCon Banner Image" width="400" height="200" />
             <div className="App-description">
               { 'It is hard to change a doctor\'s handwriting. But it shouldn\'t be hard to read them.' }
             </div>
@@ -178,7 +178,7 @@ class App extends Component {
           <div className="main-content">
             <div className="row middle-xs app-title-text">
               <div className="App-title col-xs-6">
-                DigiCon
+                <img src={banner} alt="DigiCon Banner Image" class="white-banner" width="150" height="75" />
               </div>
               {
                 (this.state.status != null && this.state.status !== 'Complete') ? (
