@@ -107,3 +107,10 @@
   flex-direction: column;
   text-align: center;
 }
+
+.lower-tables {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
