@@ -21,7 +21,7 @@ def word_match_2(l1,w) : #Function to check for 1d lists
 			return l1.index(a) +1
 	return 0
 
-def find_date(m1) :
+def find_date(m1) : #To identify as a string following date format or not 
 	
 	regex = r"\d{2}?[\s]?[\\\/-][\s]?\d{2}[\s]?[-\\\/][\s]?\d{2,4}"
 
@@ -44,8 +44,7 @@ def core(rows,boundbox): # The main function of this file
 
 	#y axis assumed vertical/height and x- axis is horizontal/width
 
-	qual_list=["allergist", "anaesthesiologist", "anasthesiologist", "anesthesiologist", "andrologist", "cardiologist", "consultant" "dermatologist", "dentist", "diabetologist", "dietician",  "electrophysiologist", "endocrinologists", "ent", "epidemiologist", "gastroenterologist", "geneticist", "geriatrician", "gynaecologist",  "gynecologist", "hematologist", "hepatologist", "immunologist", "intensivist", "neonatologist", "nephrologist", "neurologist", "neurosurgeon", "obstetrician", "onconlogist", "ophthalmologist", "orthopedist", "osteopaths", "otolaryngologists", "parasitologist", "pathologist", "pediatrician",  "perinatologist", "Periodontist", "physiatrists", "physician", "podiatrist", "psychiatrist", "psychologist", "pulmonologists", "radiologist", "specialist", "surgeon", "urologist", "veterinarian","andrology", "cardiology", "dentist", "electrophysiology", "endocrinology", "epidemiology", "gastroenterology", "geneticist", "geriatri", "gynaecology",  "gynecology", "hematology", "hepatology", "immunology", "neonatology", "nephrology", "neurology", "obstetri", "onconlogy", "ophthalmology", "otolaryngology", "parasitology", "pathology", "pediatri",  "perinatology", "physiatrist", "podiatri", "psychiatry", "psychology", "pulmonologists", "radiology", "urology","vetererinarian", "mbbs","m . b . b . s .","fcps", "f . c . p . s .","f.c.p.s.", "m.b.b.s.", "m . b . b . s .","bmbs", "m.d.", "md","m . d .", "b.m.b.s.","b . m . b . s ." "mbchb", "m.b.c.h.b.", "m . b . c . h . b ." "mbbch", "m.b.b.c.h.", "m . b . b . c . h ." "ms", "m.s.","m . s ."]# possible speciliazation, add if any
-
+	qual_list=["allergist", "anaesthesiologist", "anasthesiologist", "anesthesiologist", "andrologist", "cardiologist", "consultant" "dermatologist", "dentist", "diabetologist", "dietician",  "electrophysiologist", "endocrinologists", "ent", "epidemiologist", "gastroenterologist", "geneticist", "geriatrician", "gynaecologist",  "gynecologist", "hematologist", "hepatologist", "immunologist", "intensivist", "neonatologist", "nephrologist", "neurologist", "neurosurgeon", "obstetrician", "onconlogist", "ophthalmologist", "orthopedist", "osteopaths", "otolaryngologists", "parasitologist", "pathologist", "pediatrician",  "perinatologist", "Periodontist", "physiatrists", "physician", "podiatrist", "psychiatrist", "psychologist", "pulmonologists", "radiologist", "specialist", "surgeon", "urologist", "veterinarian","andrology", "cardiology", "dentist", "electrophysiology", "endocrinology", "epidemiology", "gastroenterology", "geneticist", "geriatri", "gynaecology",  "gynecology", "hematology", "hepatology", "immunology", "neonatology", "nephrology", "neurology", "obstetri", "onconlogy", "ophthalmology", "otolaryngology", "parasitology", "pathology", "pediatri",  "perinatology", "physiatrist", "podiatri", "psychiatry", "psychology", "pulmonologists", "radiology", "urology","vetererinarian", "mbbs","m . b . b . s .","fcps", "f . c . p . s .","f.c.p.s.", "m.b.b.s.", "m . b . b . s .","bmbs", "m.d.", "md","m . d .", "b.m.b.s.","b . m . b . s ." "mbchb", "m.b.c.h.b.", "m . b . c . h . b ." "mbbch", "m.b.b.c.h.", "m . b . b . c . h ." "ms", "m.s.","m . s ."]# possible speciliazations
 	i=1 #working variable
 	j=0 #working variable
 	hosp=''	#hosp_name
@@ -60,10 +59,10 @@ def core(rows,boundbox): # The main function of this file
 
 
 	text = boundbox[0].bound_text
-	print (text)
+	#print (text)
 	lis1=nlp.ner(text) #NER is a Named entity recognition function in the core nlp API
 	element=lis1[0]
-	print(lis1)
+	#print(lis1)
 
 	for element in lis1 : # for phone number and email
 		#if(element[1]=="NUMBER") :
@@ -86,34 +85,34 @@ def core(rows,boundbox): # The main function of this file
 	text=''
 
 	while boundbox[i].tl.y<0.3*rows: # we will check in the top 30% of paper only
-		text=text +boundbox[i].bound_text
+		text=text + boundbox[i].bound_text
 		i=i+1
 
 
 	regex = r"[\(]?[\s]?[\)]??[\s]?\d{1,8}?[\s]?[\(]?[\s]?[\)]?[\s]?[-]?[.]?[\s]?\d{1,8}[\s]?[-.]?[\s]?\d{1,8}[\s]?[-]?[.]?[\s]?\d{1,8}"
 	matches = re.finditer(regex, text)
 
-	for matchnum,match in enumerate(matches):
+	for matchnum,match in enumerate(matches): #to traverse through identified patterns and classify as possible phone numbers or date
 		if len(str(match.group()))>8 :
 			if (find_date(str(match.group()))) ==0 :
 				phone_no= str(phone_no)+ "," + str(match.group())
 			else :
-				date= str(date) + "," + str(match.group())
+				date= str(date)  + str(match.group()) + ","
 
 	regex = r"\d{2}?[\s]?[\\\/-][\s]?\d{2}[\s]?[-\\\/][\s]?\d{2,4}"
 	matches2 = re.finditer(regex, text)
 	
 
-	for matchnum2, match2 in enumerate(matches2):
-		date= str(date) + "," + str(match2.group())
+	for matchnum2, match2 in enumerate(matches2): 
+		date= str(date) + str(match2.group()) + ","
 	
-	print(text)
+	#print(text)
 
 	k=j
 	l=1
+	
 	while k<i:
 		#to find doctors name 
-
 		if list_match(nlp.word_tokenize(boundbox[k].bound_text.lower()),["dr.","dr"]):
 				#tokenise is a basic function seperates string into words/indivisual characters/symbols
 
@@ -137,26 +136,20 @@ def core(rows,boundbox): # The main function of this file
 				a=lis1[0]
 				for a in lis1 :
 					if a[1]=="NNP" :
-						l=1 
+						l=1
 						doc=doc + ' ' + a[0]
 
 					elif l==1 :
-						break 
-			
-
+						break
 			break
 		k=k+1
 
-
-
-	k=j	
+	k=j
 	l=1
 
-	while k <i:
+	while k <i: #For detecting hospital name and location
 		if (list_match (( nlp.word_tokenize ( boundbox[k].bound_text.lower())),lis)) :
 			lis1=nlp.pos_tag(boundbox[k].bound_text)
-
-
 			l=0
 			a=lis1[0]
 			for a in lis1 :	
@@ -165,14 +158,12 @@ def core(rows,boundbox): # The main function of this file
 					l=1
 				elif l==1 :
 					break;
-
 			break;
 		k=k+1
 
-
 	j=k+1
+	
 	while j<k+3:
-		
 		listy=nlp.ner(boundbox[j].bound_text)
 		l=word_match(listy,"LOCATION")
 		if(l<=0):
@@ -185,7 +176,6 @@ def core(rows,boundbox): # The main function of this file
 		lis1=nlp.pos_tag(boundbox[j].bound_text)
 		
 		if l>0 :
-			
 			i=l-2
 			while (lis1[i][0]!="NNP") and i>=0 :
 				addr=lis1[i][0] + addr
