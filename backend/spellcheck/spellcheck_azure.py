@@ -81,6 +81,7 @@ def merge_bounding_boxes(bounding_boxes):
     sentence_boxes = list(filter(lambda x: x.box_type == 'L', bounding_boxes))
     for sentence_box in sentence_boxes:
         sentence_box.bound_text = sentence_box.find_enclosed_text(word_boxes)
+        sentence_box.bb_children = sentence_box.find_enclosed_boxes(word_boxes)
         new_bounding_boxes.append(sentence_box)
 
     return new_bounding_boxes

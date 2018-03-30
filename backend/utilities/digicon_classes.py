@@ -80,6 +80,16 @@ class boundingBox:
 
         return enclosed_text
 
+    def find_enclosed_boxes(self, small_boxes):
+        this_box = self
+        enclosed_boxes = []
+
+        for small_box in small_boxes:
+            if small_box.is_enclosed_by(this_box):
+                enclosed_boxes.append(small_box)
+
+        return enclosed_boxes
+
     def is_enclosed_by(self, bigger_box):
         this_box = self
 
