@@ -20,4 +20,6 @@ output_list[0]=		hosp		#hospital_name
 output_list[1]=		doc 		#doctor_name
 output_list[2]=		addr 		#hospital_address
 output_list[3]=		qual 		#doctor_qualification/specialization
-output_list[3]=		phone_no 		#contact details
+output_list[4]=		phone_no 		#contact details
+output_list[5]=		email 		#email
+output_list[6]=		date		#date
