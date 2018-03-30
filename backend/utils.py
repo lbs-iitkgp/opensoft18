@@ -52,7 +52,10 @@ def img_to_pdf(input_image):  # name of the image as input
     return pdf_image, fresh_image
 
 def drugdose_detect(bb_object, finding, all_boxes):
+    new_all_boxes = []
+    new_all_boxes.append(all_boxes[0])
     for bbox in all_boxes:
+        new_bbox = bbox
         if bbox.box_type == 'L':
             for bb_child in bbox.bb_children:
                 if bb_object == bb_child:
@@ -62,15 +65,20 @@ def drugdose_detect(bb_object, finding, all_boxes):
                         'drug': ''.join(e for e in finding['label'] if (e.isalnum() or e == ' ')),
                         'dosage': ''.join(e for e in dosage if (e.isalnum() or e == ' '))
                     }
+                    new_bbox.bb_children.delete(bb_child)
+                    new_all_bbox.append(bb_object)
+                    new_bbox.bb_children.append(bb_object)
+        new_all_boxes.append(new_bbox)
+    return(new_all_boxes)
 
 def get_dosage(all_boxes):
     dosage_json = {}
     for bbox in all_boxes:
         if bbox.box_type == 'W' and bbox.lexi_type == 'DRUGS':
-            try:
-                dosage_json[bbox.dosage['drug']] = bbox.dosage['dosage']
-            except KeyError:
-                pass
+            # try:
+            dosage_json[bbox.dosage['drug']] = bbox.dosage['dosage']
+            # except KeyError:
+            #     pass
     return dosage_json
 
 def get_lexigram(all_boxes):
@@ -99,10 +107,10 @@ def get_lexigram(all_boxes):
                     w_box.lexi_type = finding_type
                     w_box.lexi_label = finding['label']
                     if (finding_type == 'DRUGS' and len(finding['token']) >= 3):
-                        drugdose_detect(w_box, finding, all_boxes)
+                        all_boxes = drugdose_detect(w_box, finding, all_boxes)
     # for w_box in bounding_box.bb_children:
     #     print(w_box.bound_text)
-    return individual_json
+    return (all_boxes, individual_json)
 
 def fix_bound_text(bounding_box_list):
     """
@@ -431,7 +439,7 @@ def continue_pipeline(images_path, temp_path, image_name, sockethandler):
 
     # Get lexigram data
     sockethandler.emit('statusChange','Extracting medical metadata')
-    lexigram_json = get_lexigram(ocr_data)
+    ocr_data, lexigram_json = get_lexigram(ocr_data)
 
     # Get dosages
     sockethandler.emit('statusChange','Getting dosage data')
