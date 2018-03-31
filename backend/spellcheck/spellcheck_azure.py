@@ -5,10 +5,11 @@ from os.path import join, dirname
 import operator
 import requests
 import dotenv
-dotenv.load_dotenv(join(dirname(__file__), '.env'))
+#dotenv.load_dotenv(join(dirname(__file__), '.env'))
 
 SPELLCHECK_ENDPOINT = 'https://api.cognitive.microsoft.com/bing/v7.0/spellcheck'
 SPELLCHECK_KEY = os.getenv('SPELLCHECK_KEY')
+proxies = {'http': '172.16.2.30:8080'}
 
 def spellcheck(query):
     """
@@ -17,8 +18,8 @@ def spellcheck(query):
     :return: response: JSON response of the request
     """
 
-    params = {'subscription-key': SPELLCHECK_KEY, 'text': query}
-    return requests.get(SPELLCHECK_ENDPOINT, params=params).json()
+    params = {'subscription-key': '273c393ec45646cc8c71a75e67ec5392', 'text': query}
+    return requests.get(SPELLCHECK_ENDPOINT, params=params, proxies=proxies).json()
 
 def make_correction(old_query):
     """
@@ -104,4 +105,4 @@ if __name__ == "__main__":
     """
 
     QUERY = argv[1] # For example, 'Afoxilin talet (10)'
-    make_correction(QUERY)
+    print (make_correction(QUERY))
